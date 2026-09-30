@@ -1,4 +1,6 @@
-package co.edu.poli.sw2.modelo;
+package co.edu.poli.sw2.dominio.modelo;
+
+import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
 
 import java.util.ArrayList;
 import java.util.Collections;

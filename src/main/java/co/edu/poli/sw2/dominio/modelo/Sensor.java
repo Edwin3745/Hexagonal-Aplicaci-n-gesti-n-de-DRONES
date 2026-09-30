@@ -1,4 +1,4 @@
-package co.edu.poli.sw2.modelo;
+package co.edu.poli.sw2.dominio.modelo;
 
 public class Sensor {
 

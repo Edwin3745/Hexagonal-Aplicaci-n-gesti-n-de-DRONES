@@ -2,10 +2,10 @@ package co.edu.poli.sw2.Vista;
 
 import co.edu.poli.sw2.Controlador.DronControlador;
 import co.edu.poli.sw2.Controlador.OperacionFallidaException;
-import co.edu.poli.sw2.modelo.Agricultura;
-import co.edu.poli.sw2.modelo.Dron;
-import co.edu.poli.sw2.modelo.TipoDron;
-import co.edu.poli.sw2.modelo.Vigilancia;
+import co.edu.poli.sw2.dominio.modelo.Agricultura;
+import co.edu.poli.sw2.dominio.modelo.Dron;
+import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
+import co.edu.poli.sw2.dominio.modelo.Vigilancia;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;

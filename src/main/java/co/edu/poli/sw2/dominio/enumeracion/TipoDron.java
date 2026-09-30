@@ -1,5 +1,4 @@
-package co.edu.poli.sw2.modelo;
-
+package co.edu.poli.sw2.dominio.enumeracion;
 /**
  * Enumera los tipos concretos de dron que maneja el sistema.
  *

@@ -1,10 +1,10 @@
 package co.edu.poli.sw2.servicios;
 
 
-import co.edu.poli.sw2.modelo.Agricultura;
-import co.edu.poli.sw2.modelo.Dron;
-import co.edu.poli.sw2.modelo.TipoDron;
-import co.edu.poli.sw2.modelo.Vigilancia;
+import co.edu.poli.sw2.dominio.modelo.Agricultura;
+import co.edu.poli.sw2.dominio.modelo.Dron;
+import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
+import co.edu.poli.sw2.dominio.modelo.Vigilancia;
 
 import java.sql.*;
 import java.util.ArrayList;
