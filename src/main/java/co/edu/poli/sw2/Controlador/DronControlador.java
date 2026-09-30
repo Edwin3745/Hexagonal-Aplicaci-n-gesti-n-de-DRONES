@@ -1,31 +1,35 @@
 package co.edu.poli.sw2.Controlador;
 
-import co.edu.poli.sw2.dominio.modelo.Dron;
+import co.edu.poli.sw2.aplicacion.puerto.salida.DronRepository;
+import co.edu.poli.sw2.aplicacion.puerto.salida.RepositorioException;
 import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
-import co.edu.poli.sw2.servicios.DronDAOImpl;
-import co.edu.poli.sw2.servicios.DronFactory;
-import co.edu.poli.sw2.servicios.GenericDAO;
-import co.edu.poli.sw2.servicios.ServicioException;
+import co.edu.poli.sw2.dominio.modelo.Agricultura;
+import co.edu.poli.sw2.dominio.modelo.Dron;
+import co.edu.poli.sw2.dominio.modelo.Vigilancia;
+import co.edu.poli.sw2.infraestructura.persistencia.PostgresDronRepository;
 
 import java.util.List;
 
 /**
  * Controlador de las operaciones de negocio sobre drones.
  *
- * <p>Media entre la vista y la capa de persistencia: delega la construcción
- * de objetos en {@link DronFactory}, el almacenamiento en un
- * {@link GenericDAO}, y traduce los fallos técnicos a mensajes que la vista
- * puede mostrar sin conocer detalles de la base de datos.</p>
+ * <p>Media entre la vista y la persistencia: construye los drones, delega el
+ * almacenamiento en el puerto {@link DronRepository} y traduce los fallos a
+ * mensajes que la vista puede mostrar sin conocer detalles de la base de
+ * datos.</p>
+ *
+ * <p>Clase de transición durante la migración a arquitectura hexagonal: su
+ * lógica pasará a los servicios de aplicación.</p>
  */
 public class DronControlador {
 
-    private final GenericDAO<Dron, Integer> dronDAO;
+    private final DronRepository dronDAO;
 
     /**
      * Construye el controlador con la implementación de DAO por defecto.
      */
     public DronControlador() {
-        this(new DronDAOImpl());
+        this(new PostgresDronRepository());
     }
 
     /**
@@ -36,7 +40,7 @@ public class DronControlador {
      *
      * @param dronDAO implementación de acceso a datos a utilizar.
      */
-    public DronControlador(GenericDAO<Dron, Integer> dronDAO) {
+    public DronControlador(DronRepository dronDAO) {
         this.dronDAO = dronDAO;
     }
 
@@ -58,13 +62,21 @@ public class DronControlador {
 
         validarDatosComunes(serial, modelo, fabricante, peso);
 
+        if (tipo == null) {
+            throw new OperacionFallidaException("Selecciona un tipo de dron.");
+        }
+
         // El id lo genera la base de datos, por eso se envía 0.
-        Dron dron = DronFactory.crearDron(tipo, 0, serial, modelo, fabricante,
-                                          peso, capacidadTanque, deteccionTermica);
+        Dron dron = switch (tipo) {
+            case AGRICULTURA -> new Agricultura(0, serial, modelo, fabricante,
+                                                peso, capacidadTanque);
+            case VIGILANCIA -> new Vigilancia(0, serial, modelo, fabricante,
+                                              peso, deteccionTermica);
+        };
 
         try {
             dronDAO.guardar(dron);
-        } catch (ServicioException e) {
+        } catch (RepositorioException e) {
             throw traducir(e, "registrar", serial);
         }
     }
@@ -79,7 +91,7 @@ public class DronControlador {
     public boolean eliminarDron(int id) {
         try {
             return dronDAO.eliminar(id);
-        } catch (ServicioException e) {
+        } catch (RepositorioException e) {
             throw traducir(e, "eliminar", String.valueOf(id));
         }
     }
@@ -94,7 +106,7 @@ public class DronControlador {
     public Dron buscarDron(int id) {
         try {
             return dronDAO.buscarPorId(id);
-        } catch (ServicioException e) {
+        } catch (RepositorioException e) {
             throw traducir(e, "consultar", String.valueOf(id));
         }
     }
@@ -108,7 +120,7 @@ public class DronControlador {
     public List<Dron> listarDrones() {
         try {
             return dronDAO.listarTodos();
-        } catch (ServicioException e) {
+        } catch (RepositorioException e) {
             throw traducir(e, "listar", null);
         }
     }
@@ -128,7 +140,7 @@ public class DronControlador {
                             dron.getFabricante(), dron.getPeso());
         try {
             return dronDAO.actualizar(dron);
-        } catch (ServicioException e) {
+        } catch (RepositorioException e) {
             throw traducir(e, "actualizar", dron.getSerial());
         }
     }
@@ -170,7 +182,7 @@ public class DronControlador {
      * @param referencia dato identificador del registro implicado, puede ser nulo.
      * @return excepción con un mensaje apto para el usuario.
      */
-    private OperacionFallidaException traducir(ServicioException e,
+    private OperacionFallidaException traducir(RepositorioException e,
                                                String operacion, String referencia) {
         if (e.esDuplicado()) {
             return new OperacionFallidaException(

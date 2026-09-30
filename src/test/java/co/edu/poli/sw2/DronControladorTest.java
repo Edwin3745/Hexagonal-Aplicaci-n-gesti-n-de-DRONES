@@ -3,7 +3,7 @@ package co.edu.poli.sw2;
 import co.edu.poli.sw2.Controlador.DronControlador;
 import co.edu.poli.sw2.dominio.modelo.Dron;
 import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
-import co.edu.poli.sw2.servicios.GenericDAO;
+import co.edu.poli.sw2.aplicacion.puerto.salida.DronRepository;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class DronControladorTest {
         assertEquals("SN-001", dron.getSerial());
     }
 
-    private static class InMemoryDronDAO implements GenericDAO<Dron, Integer> {
+    private static class InMemoryDronDAO implements DronRepository {
         private final Map<Integer, Dron> drones = new HashMap<>();
         private int nextId = 1;
 
@@ -46,12 +46,12 @@ public class DronControladorTest {
         }
 
         @Override
-        public boolean eliminar(Integer id) {
+        public boolean eliminar(int id) {
             return drones.remove(id) != null;
         }
 
         @Override
-        public Dron buscarPorId(Integer id) {
+        public Dron buscarPorId(int id) {
             return drones.get(id);
         }
 

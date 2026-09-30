@@ -1,6 +1,8 @@
-package co.edu.poli.sw2.servicios;
+package co.edu.poli.sw2.infraestructura.persistencia;
 
-
+import co.edu.poli.sw2.aplicacion.puerto.salida.DronRepository;
+import co.edu.poli.sw2.aplicacion.puerto.salida.RepositorioException;
+import co.edu.poli.sw2.aplicacion.puerto.salida.RepositorioException.Motivo;
 import co.edu.poli.sw2.dominio.modelo.Agricultura;
 import co.edu.poli.sw2.dominio.modelo.Dron;
 import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
@@ -11,7 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Implementación JDBC de {@link GenericDAO} para la jerarquía {@link Dron}.
+ * Adaptador de salida: implementación PostgreSQL del puerto
+ * {@link DronRepository}.
+ *
+ * <p>Es la única clase del sistema que sabe que los drones se guardan en una
+ * base de datos relacional. Traduce en ambos sentidos: de objetos del dominio a
+ * filas de la tabla {@code dron}, y de los errores de JDBC a
+ * {@link RepositorioException}, para que ninguna capa interior conozca
+ * {@link SQLException}.</p>
  *
  * <p>La herencia se persiste con la estrategia de tabla única con columna
  * discriminadora: todos los subtipos comparten la tabla {@code dron} y la
@@ -19,12 +28,12 @@ import java.util.List;
  * propios de un subtipo quedan en NULL en las filas de los demás.</p>
  *
  * <p>Todos los métodos trabajan sobre la conexión compartida que entrega
- * {@link ConexionBD}. El DAO cierra únicamente lo que él mismo abre
+ * {@link ConexionBD}. El repositorio cierra únicamente lo que él mismo abre
  * ({@link PreparedStatement} y {@link ResultSet}); la conexión no se cierra
  * nunca aquí, porque es propiedad del Singleton y las operaciones posteriores
  * la siguen necesitando.</p>
  */
-public class DronDAOImpl implements GenericDAO<Dron, Integer> {
+public class PostgresDronRepository implements DronRepository {
 
     /** Columnas comunes a todos los subtipos, en el orden en que se leen y escriben. */
     private static final String COLUMNAS =
@@ -68,7 +77,7 @@ public class DronDAOImpl implements GenericDAO<Dron, Integer> {
             }
 
         } catch (SQLException e) {
-            throw new ServicioException("Error al guardar el dron", e);
+            throw traducir("Error al guardar el dron", e);
         }
     }
 
@@ -79,7 +88,7 @@ public class DronDAOImpl implements GenericDAO<Dron, Integer> {
      * @return {@code true} si se eliminó alguna fila.
      */
     @Override
-    public boolean eliminar(Integer id) {
+    public boolean eliminar(int id) {
         String sql = "DELETE FROM dron WHERE id = ?";
 
         // La conexión no entra en el try-with-resources: pertenece al Singleton
@@ -90,7 +99,7 @@ public class DronDAOImpl implements GenericDAO<Dron, Integer> {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            throw new ServicioException("Error al eliminar el dron", e);
+            throw traducir("Error al eliminar el dron", e);
         }
     }
 
@@ -101,7 +110,7 @@ public class DronDAOImpl implements GenericDAO<Dron, Integer> {
      * @return el dron encontrado, o {@code null} si no existe.
      */
     @Override
-    public Dron buscarPorId(Integer id) {
+    public Dron buscarPorId(int id) {
         String sql = "SELECT " + COLUMNAS + " FROM dron WHERE id = ?";
 
         // La conexión no entra en el try-with-resources: pertenece al Singleton
@@ -117,7 +126,7 @@ public class DronDAOImpl implements GenericDAO<Dron, Integer> {
             }
 
         } catch (SQLException e) {
-            throw new ServicioException("Error al buscar el dron", e);
+            throw traducir("Error al buscar el dron", e);
         }
 
         return null;
@@ -143,7 +152,7 @@ public class DronDAOImpl implements GenericDAO<Dron, Integer> {
             }
 
         } catch (SQLException e) {
-            throw new ServicioException("Error al listar drones", e);
+            throw traducir("Error al listar drones", e);
         }
 
         return drones;
@@ -180,7 +189,7 @@ public class DronDAOImpl implements GenericDAO<Dron, Integer> {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            throw new ServicioException("Error al actualizar el dron", e);
+            throw traducir("Error al actualizar el dron", e);
         }
     }
 
@@ -191,7 +200,7 @@ public class DronDAOImpl implements GenericDAO<Dron, Integer> {
     /**
      * Escribe en la sentencia los atributos que solo existen en un subtipo.
      *
-     * <p>Es el único punto del DAO que necesita distinguir la subclase concreta.
+     * <p>Es el único punto del repositorio que necesita distinguir la subclase concreta.
      * La columna que no corresponde al subtipo se marca explícitamente como NULL,
      * tal como exige la restricción de coherencia del esquema.</p>
      *
@@ -223,9 +232,9 @@ public class DronDAOImpl implements GenericDAO<Dron, Integer> {
      * Convierte la fila actual del {@link ResultSet} en la subclase de
      * {@link Dron} que corresponda.
      *
-     * <p>La columna discriminadora determina qué construir; la construcción
-     * se delega en {@link DronFactory}, de modo que este DAO no instancia
-     * directamente ninguna subclase.</p>
+     * <p>La columna discriminadora {@code tipo} decide qué subclase construir.
+     * Solo se lee la columna específica del subtipo elegido: la del otro subtipo
+     * es NULL en esa fila.</p>
      *
      * @param rs resultado posicionado en la fila a convertir.
      * @return instancia de {@link Agricultura} o {@link Vigilancia}.
@@ -235,21 +244,44 @@ public class DronDAOImpl implements GenericDAO<Dron, Integer> {
 
         TipoDron tipo = TipoDron.desdeCodigo(rs.getString("tipo"));
 
-        // getDouble y getBoolean devuelven 0 y false cuando la columna es NULL.
-        // Como la fábrica recibe ambos valores, se leen los dos y solo se usa
-        // el que corresponda al tipo: el otro se ignora dentro de la fábrica.
-        double capacidadTanque = rs.getDouble("capacidad_tanque");
-        boolean deteccionTermica = rs.getBoolean("deteccion_termica");
+        int id = rs.getInt("id");
+        String serial = rs.getString("serial");
+        String modelo = rs.getString("modelo");
+        String fabricante = rs.getString("fabricante");
+        double peso = rs.getDouble("peso");
 
-        return DronFactory.crearDron(
-                tipo,
-                rs.getInt("id"),
-                rs.getString("serial"),
-                rs.getString("modelo"),
-                rs.getString("fabricante"),
-                rs.getDouble("peso"),
-                capacidadTanque,
-                deteccionTermica
-        );
+        return switch (tipo) {
+            case AGRICULTURA -> new Agricultura(id, serial, modelo, fabricante, peso,
+                                                rs.getDouble("capacidad_tanque"));
+            case VIGILANCIA -> new Vigilancia(id, serial, modelo, fabricante, peso,
+                                              rs.getBoolean("deteccion_termica"));
+        };
+    }
+
+    /**
+     * Traduce un error de JDBC al lenguaje del puerto de salida.
+     *
+     * <p>Aquí, y solo aquí, se interpretan los códigos SQLSTATE de PostgreSQL.
+     * La aplicación recibe un {@link Motivo} de negocio y nunca ve el código
+     * técnico ni la {@link SQLException}, que se conserva únicamente como
+     * causa.</p>
+     *
+     * @param mensaje descripción de la operación que falló.
+     * @param e       error original de JDBC.
+     * @return excepción del puerto con el motivo correspondiente.
+     */
+    private static RepositorioException traducir(String mensaje, SQLException e) {
+        String codigo = e.getSQLState();
+        Motivo motivo;
+        if ("23505".equals(codigo)) {
+            motivo = Motivo.DUPLICADO;
+        } else if ("23514".equals(codigo) || "23502".equals(codigo)) {
+            motivo = Motivo.REGLA_INCUMPLIDA;
+        } else if ("23503".equals(codigo)) {
+            motivo = Motivo.REFERENCIA_INVALIDA;
+        } else {
+            motivo = Motivo.FALLO_TECNICO;
+        }
+        return new RepositorioException(motivo, mensaje, e);
     }
 }

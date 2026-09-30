@@ -4,7 +4,7 @@ import co.edu.poli.sw2.Controlador.DronControlador;
 import co.edu.poli.sw2.dominio.modelo.Agricultura;
 import co.edu.poli.sw2.dominio.modelo.Dron;
 import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
-import co.edu.poli.sw2.servicios.ConexionBD;
+import co.edu.poli.sw2.infraestructura.persistencia.ConexionBD;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;

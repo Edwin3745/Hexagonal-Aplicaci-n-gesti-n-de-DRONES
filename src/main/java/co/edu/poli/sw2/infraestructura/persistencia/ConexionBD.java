@@ -1,4 +1,4 @@
-package co.edu.poli.sw2.servicios;
+package co.edu.poli.sw2.infraestructura.persistencia;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -25,7 +25,7 @@ import java.util.Properties;
  * más costosa de cada consulta.</p>
  *
  * <p>La contrapartida del diseño es que la conexión <strong>pertenece al
- * Singleton</strong>: ningún DAO debe cerrarla, porque dejaría inservibles a
+ * Singleton</strong>: ningún repositorio debe cerrarla, porque dejaría inservibles a
  * todas las operaciones posteriores. La única clase autorizada a cerrarla es
  * {@code MainApp}, al terminar la aplicación, mediante
  * {@link #cerrarConexion()}.</p>
@@ -103,7 +103,7 @@ public final class ConexionBD {
      *
      * <p><strong>La conexión pertenece al Singleton: quien la recibe no debe
      * cerrarla.</strong> En particular, no debe colocarse en un
-     * {@code try-with-resources}: cerrarla desde un DAO haría fallar todas las
+     * {@code try-with-resources}: cerrarla desde un repositorio haría fallar todas las
      * operaciones posteriores de la aplicación. Su cierre corresponde
      * únicamente a {@link #cerrarConexion()}, al terminar el programa.</p>
      *
@@ -147,7 +147,7 @@ public final class ConexionBD {
     /**
      * Atajo para obtener la conexión compartida sin pedir antes la instancia.
      *
-     * <p>Es el método que utilizan los DAO; delega en {@link #getConexion()},
+     * <p>Es el método que utilizan los repositorios; delega en {@link #getConexion()},
      * por lo que rigen las mismas condiciones: la conexión es del Singleton y
      * no debe cerrarse.</p>
      *
