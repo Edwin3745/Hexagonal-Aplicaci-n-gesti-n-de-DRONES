@@ -1,10 +1,13 @@
 package co.edu.poli.sw2;
 
-import co.edu.poli.sw2.Controlador.DronControlador;
 import co.edu.poli.sw2.dominio.modelo.Agricultura;
 import co.edu.poli.sw2.dominio.modelo.Dron;
 import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
 import co.edu.poli.sw2.infraestructura.persistencia.ConexionBD;
+import co.edu.poli.sw2.infraestructura.persistencia.PostgresDronRepository;
+import co.edu.poli.sw2.infraestructura.ui.AppDron;
+import co.edu.poli.sw2.infraestructura.ui.DronAdaptador;
+
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -28,7 +31,7 @@ class FlujoCrudDronTest {
 
     @Test
     void variasOperacionesSeguidas_debenCompletarseSinCerrarLaConexion() {
-        DronControlador controlador = new DronControlador();
+        DronAdaptador controlador = AppDron.crearAdaptador(new PostgresDronRepository());
         Connection conexionInicial = obtenerConexion();
 
         try {
@@ -93,7 +96,7 @@ class FlujoCrudDronTest {
      * @param controlador controlador con el que consultar.
      * @return los drones cuyo serial empieza por el prefijo de la prueba.
      */
-    private List<Dron> buscarDeLaPrueba(DronControlador controlador) {
+    private List<Dron> buscarDeLaPrueba(DronAdaptador controlador) {
         return controlador.listarDrones().stream()
                 .filter(d -> d.getSerial().startsWith(PREFIJO))
                 .toList();
@@ -104,7 +107,7 @@ class FlujoCrudDronTest {
      *
      * @param controlador controlador con el que eliminar.
      */
-    private void limpiar(DronControlador controlador) {
+    private void limpiar(DronAdaptador controlador) {
         buscarDeLaPrueba(controlador)
                 .forEach(dron -> controlador.eliminarDron(dron.getId()));
     }

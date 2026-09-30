@@ -142,6 +142,35 @@ public abstract class Dron {
     }
 
     // ------------------------------------------------------------------
+    // Reglas de negocio
+    // ------------------------------------------------------------------
+
+    /**
+     * Comprueba que el dron cumple las reglas básicas del negocio.
+     *
+     * <p>Las reglas viven en el dominio y no en los servicios ni en la vista:
+     * así se aplican igual sin importar desde dónde se registre o se
+     * modifique un dron.</p>
+     *
+     * @throws IllegalArgumentException con un mensaje que indica la regla
+     *                                  incumplida, si alguna no se cumple.
+     */
+    public void validar() {
+        if (serial == null || serial.isBlank()) {
+            throw new IllegalArgumentException("El serial es obligatorio.");
+        }
+        if (modelo == null || modelo.isBlank()) {
+            throw new IllegalArgumentException("El modelo es obligatorio.");
+        }
+        if (fabricante == null || fabricante.isBlank()) {
+            throw new IllegalArgumentException("El fabricante es obligatorio.");
+        }
+        if (peso < 0) {
+            throw new IllegalArgumentException("El peso no puede ser negativo.");
+        }
+    }
+
+    // ------------------------------------------------------------------
     // Asociación bidireccional con Piloto
     // ------------------------------------------------------------------
 

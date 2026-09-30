@@ -1,7 +1,6 @@
-package co.edu.poli.sw2.Vista;
+package co.edu.poli.sw2.infraestructura.ui;
 
-import co.edu.poli.sw2.Controlador.DronControlador;
-import co.edu.poli.sw2.Controlador.OperacionFallidaException;
+import co.edu.poli.sw2.aplicacion.puerto.entrada.OperacionFallidaException;
 import co.edu.poli.sw2.dominio.modelo.Agricultura;
 import co.edu.poli.sw2.dominio.modelo.Dron;
 import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
@@ -14,14 +13,18 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.StringConverter;
 
 /**
- * Controlador de la vista de gestión de drones.
+ * Tecnología de la interfaz: controlador JavaFX de la pantalla de drones.
  *
- * <p>Solo se ocupa de la interfaz: recoge lo que el usuario escribe, se lo pasa
- * a {@link DronControlador} y muestra lo que este devuelve. No conoce la base
- * de datos ni interpreta errores técnicos: cuando algo falla, muestra el
- * mensaje que ya viene redactado desde la capa de control.</p>
+ * <p>Es la única clase que conoce JavaFX. Solo se ocupa de los controles:
+ * recoge lo que el usuario escribe, se lo pasa a {@link DronAdaptador} y
+ * muestra lo que este devuelve. No conoce los casos de uso ni la base de datos,
+ * y no interpreta errores técnicos: cuando algo falla, muestra el mensaje que
+ * ya viene redactado desde la aplicación.</p>
+ *
+ * <p>Recibe el adaptador por su constructor. Lo crea {@code AppDron}, que se lo
+ * entrega a través de la fábrica de controladores del {@code FXMLLoader}.</p>
  */
-public class DronVista {
+public class DronTecnologia {
 
     @FXML private ComboBox<TipoDron> cmbTipo;
     @FXML private TextField txtId;
@@ -43,8 +46,18 @@ public class DronVista {
     @FXML private TableColumn<Dron, String> colFabricante;
     @FXML private TableColumn<Dron, Double> colPeso;
 
-    private final DronControlador dronControlador = new DronControlador();
+    /** Adaptador de entrada al que se delega cada acción del usuario. */
+    private final DronAdaptador adaptador;
     private final ObservableList<Dron> listaDrones = FXCollections.observableArrayList();
+
+    /**
+     * Crea el controlador de la pantalla con el adaptador que va a usar.
+     *
+     * @param adaptador adaptador de entrada de la aplicación.
+     */
+    public DronTecnologia(DronAdaptador adaptador) {
+        this.adaptador = adaptador;
+    }
 
     @FXML
     public void initialize() {
@@ -145,7 +158,7 @@ public class DronVista {
                 return;
             }
 
-            dronControlador.registrarDron(
+            adaptador.registrarDron(
                     tipo,
                     txtSerial.getText().trim(),
                     txtModelo.getText().trim(),
@@ -184,7 +197,7 @@ public class DronVista {
                 vigilancia.setDeteccionTermica(chkDeteccionTermica.isSelected());
             }
 
-            dronControlador.actualizarDron(seleccionado);
+            adaptador.actualizarDron(seleccionado);
             actualizarTabla();
             limpiarFormulario();
 
@@ -209,7 +222,7 @@ public class DronVista {
         confirmacion.showAndWait().ifPresent(respuesta -> {
             if (respuesta == ButtonType.OK) {
                 try {
-                    dronControlador.eliminarDron(seleccionado.getId());
+                    adaptador.eliminarDron(seleccionado.getId());
                     actualizarTabla();
                     limpiarFormulario();
                 } catch (OperacionFallidaException e) {
@@ -259,7 +272,7 @@ public class DronVista {
 
     private void actualizarTabla() {
         try {
-            listaDrones.setAll(dronControlador.listarDrones());
+            listaDrones.setAll(adaptador.listarDrones());
         } catch (OperacionFallidaException e) {
             mostrarAlerta(e.getMessage());
         }

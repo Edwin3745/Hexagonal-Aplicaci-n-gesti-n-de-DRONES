@@ -27,7 +27,7 @@ import java.util.Properties;
  * <p>La contrapartida del diseño es que la conexión <strong>pertenece al
  * Singleton</strong>: ningún repositorio debe cerrarla, porque dejaría inservibles a
  * todas las operaciones posteriores. La única clase autorizada a cerrarla es
- * {@code MainApp}, al terminar la aplicación, mediante
+ * {@code AppDron}, al terminar la aplicación, mediante
  * {@link #cerrarConexion()}.</p>
  *
  * <p>Las credenciales nunca se exponen: no se imprimen por consola ni se
@@ -121,7 +121,7 @@ public final class ConexionBD {
      * Cierra la conexión compartida y la descarta.
      *
      * <p>Está pensado para invocarse una sola vez, al terminar la aplicación,
-     * desde {@code MainApp.stop()}. Tras llamarlo, una nueva petición a
+     * desde {@code AppDron.stop()}. Tras llamarlo, una nueva petición a
      * {@link #getConexion()} vuelve a abrir la conexión, de modo que el
      * Singleton nunca queda inservible.</p>
      *
@@ -236,4 +236,4 @@ public final class ConexionBD {
         }
         return valor.trim();
     }
-}
+}

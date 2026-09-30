@@ -1,8 +1,11 @@
 package co.edu.poli.sw2;
 
-import co.edu.poli.sw2.Controlador.DronControlador;
-import co.edu.poli.sw2.Controlador.OperacionFallidaException;
+import co.edu.poli.sw2.aplicacion.puerto.entrada.OperacionFallidaException;
 import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
+import co.edu.poli.sw2.infraestructura.persistencia.PostgresDronRepository;
+import co.edu.poli.sw2.infraestructura.ui.AppDron;
+import co.edu.poli.sw2.infraestructura.ui.DronAdaptador;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,7 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class ManejoErroresTest {
 
-    private final DronControlador controlador = new DronControlador();
+    private final DronAdaptador controlador =
+            AppDron.crearAdaptador(new PostgresDronRepository());
 
     @Test
     void registrarDron_conSerialVacio_debeLanzarOperacionFallida() {

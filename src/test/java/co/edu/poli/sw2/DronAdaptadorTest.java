@@ -1,8 +1,9 @@
 package co.edu.poli.sw2;
 
-import co.edu.poli.sw2.Controlador.DronControlador;
 import co.edu.poli.sw2.dominio.modelo.Dron;
 import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
+import co.edu.poli.sw2.infraestructura.ui.AppDron;
+import co.edu.poli.sw2.infraestructura.ui.DronAdaptador;
 import co.edu.poli.sw2.aplicacion.puerto.salida.DronRepository;
 import org.junit.jupiter.api.Test;
 
@@ -13,11 +14,11 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class DronControladorTest {
+public class DronAdaptadorTest {
 
     @Test
     void testRegistrarYBuscarDron() {
-        DronControlador controlador = new DronControlador(new InMemoryDronDAO());
+        DronAdaptador controlador = AppDron.crearAdaptador(new InMemoryDronDAO());
 
         controlador.registrarDron(
                 TipoDron.AGRICULTURA,
