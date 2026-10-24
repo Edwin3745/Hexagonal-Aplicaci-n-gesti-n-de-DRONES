@@ -31,7 +31,7 @@ class FlujoCrudDronTest {
 
     @Test
     void variasOperacionesSeguidas_debenCompletarseSinCerrarLaConexion() {
-        DronAdaptador controlador = AppDron.crearAdaptador(new PostgresDronRepository());
+        DronAdaptador controlador = AppDron.crearAdaptador(new PostgresDronRepository(), null, null, null);
         Connection conexionInicial = obtenerConexion();
 
         try {

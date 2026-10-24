@@ -5,6 +5,7 @@ import co.edu.poli.sw2.dominio.modelo.Agricultura;
 import co.edu.poli.sw2.dominio.modelo.Dron;
 import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
 import co.edu.poli.sw2.dominio.modelo.Vigilancia;
+import co.edu.poli.sw2.dominio.weather.Weather;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -45,6 +46,9 @@ public class DronTecnologia {
     @FXML private TableColumn<Dron, String> colModelo;
     @FXML private TableColumn<Dron, String> colFabricante;
     @FXML private TableColumn<Dron, Double> colPeso;
+
+    @FXML private TextField txtCiudad;
+    @FXML private TextArea txtClima;
 
     /** Adaptador de entrada al que se delega cada acción del usuario. */
     private final DronAdaptador adaptador;
@@ -243,6 +247,84 @@ public class DronTecnologia {
         chkDeteccionTermica.setSelected(false);
         cmbTipo.getSelectionModel().selectFirst();
         tablaDrones.getSelectionModel().clearSelection();
+    }
+
+    // ------------------------------------------------------------------
+    // Clima (patrón Observer)
+    // ------------------------------------------------------------------
+
+    /**
+     * Consulta el clima de la ciudad escrita. No muestra nada por sí mismo:
+     * el resultado llega a la pantalla a través de los observadores suscritos.
+     */
+    @FXML
+    public void consultarClima() {
+        String ciudad = txtCiudad.getText().trim();
+        if (ciudad.isEmpty()) {
+            mostrarAlerta("Escribe una ciudad para consultar el clima.");
+            return;
+        }
+        try {
+            adaptador.getWeather(ciudad);
+        } catch (OperacionFallidaException e) {
+            mostrarAlerta(e.getMessage());
+        }
+    }
+
+    /** Suscribe el dron seleccionado en la tabla al notificador del clima. */
+    @FXML
+    public void suscribirDron() {
+        Dron seleccionado = tablaDrones.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta("Selecciona un dron de la tabla para suscribirlo.");
+            return;
+        }
+        try {
+            adaptador.subscribeDrone(seleccionado, this::mostrarLinea);
+            mostrarLinea("Dron " + seleccionado.getSerial() + " suscrito.");
+        } catch (OperacionFallidaException e) {
+            mostrarAlerta(e.getMessage());
+        }
+    }
+
+    /** Desuscribe el dron seleccionado en la tabla del notificador del clima. */
+    @FXML
+    public void desuscribirDron() {
+        Dron seleccionado = tablaDrones.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta("Selecciona un dron de la tabla para desuscribirlo.");
+            return;
+        }
+        try {
+            adaptador.unsubscribeDrone(seleccionado);
+            mostrarLinea("Dron " + seleccionado.getSerial() + " desuscrito.");
+        } catch (OperacionFallidaException e) {
+            mostrarAlerta(e.getMessage());
+        }
+    }
+
+    /**
+     * Muestra los cinco aspectos del clima. La invoca el {@code DashboardObserver}.
+     *
+     * @param weather clima recibido.
+     */
+    public void mostrarClima(Weather weather) {
+        mostrarLinea("");
+        mostrarLinea("Clima en " + weather.getCity());
+        mostrarLinea(String.format("  Temperatura: %.1f °C", weather.getTemperature()));
+        mostrarLinea(String.format("  Humedad: %.0f %%", weather.getHumidity()));
+        mostrarLinea(String.format("  Viento: %.1f km/h", weather.getWindSpeed()));
+        mostrarLinea(String.format("  Presión: %.0f hPa", weather.getPressure()));
+        mostrarLinea(String.format("  Visibilidad: %.1f km", weather.getVisibility()));
+    }
+
+    /**
+     * Agrega una línea al área de resultados del clima.
+     *
+     * @param linea texto a mostrar.
+     */
+    private void mostrarLinea(String linea) {
+        txtClima.appendText(linea + System.lineSeparator());
     }
 
     // ------------------------------------------------------------------
