@@ -15,7 +15,7 @@
         <javafx.version>21.0.2</javafx.version>
     </properties>
 
-    <dependencies>
+        <dependencies>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -30,6 +30,11 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20240303</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

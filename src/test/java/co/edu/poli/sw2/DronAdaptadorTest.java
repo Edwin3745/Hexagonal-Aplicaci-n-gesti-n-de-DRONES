@@ -18,7 +18,7 @@ public class DronAdaptadorTest {
 
     @Test
     void testRegistrarYBuscarDron() {
-        DronAdaptador controlador = AppDron.crearAdaptador(new InMemoryDronDAO());
+        DronAdaptador controlador = AppDron.crearAdaptador(new InMemoryDronDAO(), null, null, null);
 
         controlador.registrarDron(
                 TipoDron.AGRICULTURA,

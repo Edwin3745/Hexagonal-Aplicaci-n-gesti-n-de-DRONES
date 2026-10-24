@@ -19,8 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ManejoErroresTest {
 
     private final DronAdaptador controlador =
-            AppDron.crearAdaptador(new PostgresDronRepository());
-
+                        AppDron.crearAdaptador(new PostgresDronRepository(), null, null, null);
     @Test
     void registrarDron_conSerialVacio_debeLanzarOperacionFallida() {
         OperacionFallidaException ex = assertThrows(OperacionFallidaException.class, () ->
