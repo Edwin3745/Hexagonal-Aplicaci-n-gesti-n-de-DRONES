@@ -15,7 +15,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="co.edu.poli.sw2.vista.DronTecnologia"
+            fx:controller="co.edu.poli.sw2.infraestructura.ui.DronTecnologia"
             styleClass="root-pane">
 
     <top>
@@ -91,4 +91,4 @@
         </TableView>
     </center>
 
-</BorderPane>
+</BorderPane>
