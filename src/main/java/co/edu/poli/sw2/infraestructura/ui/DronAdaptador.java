@@ -6,10 +6,18 @@ import co.edu.poli.sw2.aplicacion.puerto.entrada.ListarDronUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.ListarDronesUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.OperacionFallidaException;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.RegistrarDronUseCase;
+import co.edu.poli.sw2.aplicacion.puerto.entrada.mision.ProgramarMisionUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.weather.EvaluarViabilidadVueloUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.weather.GetWeatherByCityUseCase;
 import co.edu.poli.sw2.aplicacion.observer.FlightStatusObserver;
 import co.edu.poli.sw2.aplicacion.servicio.weather.WeatherNotificationService;
+import co.edu.poli.sw2.dominio.command.DroneCommand;
+import co.edu.poli.sw2.dominio.command.EscanearZonaCommand;
+import co.edu.poli.sw2.dominio.command.MedirTemperaturaCommand;
+import co.edu.poli.sw2.dominio.command.OperacionesDron;
+import co.edu.poli.sw2.dominio.command.ResultadoTarea;
+import co.edu.poli.sw2.dominio.command.TipoTarea;
+import co.edu.poli.sw2.dominio.command.TomarFotografiaCommand;
 import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
 import co.edu.poli.sw2.dominio.modelo.Agricultura;
 import co.edu.poli.sw2.dominio.modelo.Dron;
@@ -20,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Adaptador de entrada: traduce las acciones del usuario en llamadas a los
@@ -45,6 +54,8 @@ public class DronAdaptador {
     private final GetWeatherByCityUseCase consultarClima;
     private final WeatherNotificationService notificador;
     private final EvaluarViabilidadVueloUseCase evaluador;
+    private final ProgramarMisionUseCase programador;
+    private final Function<Dron, OperacionesDron> fabricaReceptor;
 
     /** Observador de cada dron suscrito, por id, para poder desuscribirlo. */
     private final Map<Integer, FlightStatusObserver> dronesSuscritos = new HashMap<>();
@@ -60,6 +71,8 @@ public class DronAdaptador {
      * @param consultarClima caso de uso de consultar el clima de una ciudad.
      * @param notificador    notificador al que se suscriben los drones.
      * @param evaluador      caso de uso que evalúa el clima con la cadena.
+     * @param programador    caso de uso que programa y ejecuta las tareas de la misión.
+     * @param fabricaReceptor crea el receptor (operaciones) de un dron concreto.
      */
     public DronAdaptador(RegistrarDronUseCase registrar,
                          ListarDronesUseCase listarTodos,
@@ -68,7 +81,9 @@ public class DronAdaptador {
                          EliminarDronUseCase eliminar,
                          GetWeatherByCityUseCase consultarClima,
                          WeatherNotificationService notificador,
-                         EvaluarViabilidadVueloUseCase evaluador) {
+                         EvaluarViabilidadVueloUseCase evaluador,
+                         ProgramarMisionUseCase programador,
+                         Function<Dron, OperacionesDron> fabricaReceptor) {
         this.registrar = registrar;
         this.listarTodos = listarTodos;
         this.listarUno = listarUno;
@@ -77,6 +92,8 @@ public class DronAdaptador {
         this.consultarClima = consultarClima;
         this.notificador = notificador;
         this.evaluador = evaluador;
+        this.programador = programador;
+        this.fabricaReceptor = fabricaReceptor;
     }
 
     /**
@@ -191,5 +208,53 @@ public class DronAdaptador {
             throw new OperacionFallidaException("El dron " + dron.getSerial() + " no está suscrito.");
         }
         notificador.unsubscribe(observador);
+    }
+
+    // ------------------------------------------------------------------
+    // Misión (patrón Command)
+    // ------------------------------------------------------------------
+
+    /**
+     * Crea el comando correspondiente, le entrega su receptor y lo programa.
+     * Este adaptador actúa como Client del patrón Command.
+     *
+     * @param dron dron que ejecutará la tarea.
+     * @param tipo tarea a programar.
+     * @throws OperacionFallidaException si falta el dron o la tarea.
+     */
+    public void programarTarea(Dron dron, TipoTarea tipo) {
+        if (dron == null) {
+            throw new OperacionFallidaException("Selecciona un dron de la tabla.");
+        }
+        if (tipo == null) {
+            throw new OperacionFallidaException("Selecciona una tarea.");
+        }
+        OperacionesDron receptor = fabricaReceptor.apply(dron);
+        DroneCommand comando = switch (tipo) {
+            case FOTOGRAFIA  -> new TomarFotografiaCommand(receptor);
+            case ESCANEO     -> new EscanearZonaCommand(receptor);
+            case TEMPERATURA -> new MedirTemperaturaCommand(receptor);
+        };
+        programador.programar(comando);
+    }
+
+    /** @return nombres de las tareas pendientes, en orden. */
+    public List<String> tareasPendientes() {
+        return programador.listarPendientes();
+    }
+
+    /**
+     * Ejecuta las tareas programadas en el orden registrado.
+     *
+     * @return un resultado por cada tarea.
+     * @throws OperacionFallidaException si no hay tareas programadas.
+     */
+    public List<ResultadoTarea> ejecutarMision() {
+        return programador.ejecutar();
+    }
+
+    /** Descarta las tareas pendientes. */
+    public void cancelarMision() {
+        programador.limpiar();
     }
 }

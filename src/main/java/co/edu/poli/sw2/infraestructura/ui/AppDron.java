@@ -3,6 +3,7 @@ package co.edu.poli.sw2.infraestructura.ui;
 import co.edu.poli.sw2.aplicacion.observer.ConsoleObserver;
 import co.edu.poli.sw2.aplicacion.observer.DashboardObserver;
 import co.edu.poli.sw2.aplicacion.observer.LoggerObserver;
+import co.edu.poli.sw2.aplicacion.puerto.entrada.mision.ProgramarMisionUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.weather.EvaluarViabilidadVueloUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.weather.GetWeatherByCityUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.salida.DronRepository;
@@ -11,9 +12,13 @@ import co.edu.poli.sw2.aplicacion.servicio.EliminarDronServicio;
 import co.edu.poli.sw2.aplicacion.servicio.ListarDronServicio;
 import co.edu.poli.sw2.aplicacion.servicio.ListarDronesServicio;
 import co.edu.poli.sw2.aplicacion.servicio.RegistrarDronServicio;
+import co.edu.poli.sw2.aplicacion.servicio.mision.DroneOperacionService;
+import co.edu.poli.sw2.aplicacion.servicio.mision.ProgramadorTareas;
 import co.edu.poli.sw2.aplicacion.servicio.weather.EvaluarViabilidadVueloServicio;
 import co.edu.poli.sw2.aplicacion.servicio.weather.GetWeatherByCityService;
 import co.edu.poli.sw2.aplicacion.servicio.weather.WeatherNotificationService;
+import co.edu.poli.sw2.dominio.command.OperacionesDron;
+import co.edu.poli.sw2.dominio.modelo.Dron;
 import co.edu.poli.sw2.infraestructura.persistencia.ConexionBD;
 import co.edu.poli.sw2.infraestructura.persistencia.PostgresDronRepository;
 import co.edu.poli.sw2.infraestructura.weather.GeoApiAdapter;
@@ -29,6 +34,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Function;
 
 /**
  * Aplicación JavaFX y punto de composición de la arquitectura hexagonal.
@@ -61,6 +67,24 @@ public class AppDron extends Application {
                                                GetWeatherByCityUseCase consultarClima,
                                                WeatherNotificationService notificador,
                                                EvaluarViabilidadVueloUseCase evaluador) {
+        return crearAdaptador(repositorio, consultarClima, notificador, evaluador,
+                new ProgramadorTareas(), DroneOperacionService::new);
+    }
+
+    /**
+     * Igual que la anterior, pero permite inyectar el caso de uso de misión
+     * (patrón Command) y la fábrica de receptores.
+     *
+     * @param programador     caso de uso que programa y ejecuta las tareas.
+     * @param fabricaReceptor crea el receptor de operaciones de un dron.
+     * @return adaptador de entrada listo para usarse.
+     */
+    public static DronAdaptador crearAdaptador(DronRepository repositorio,
+                                               GetWeatherByCityUseCase consultarClima,
+                                               WeatherNotificationService notificador,
+                                               EvaluarViabilidadVueloUseCase evaluador,
+                                               ProgramarMisionUseCase programador,
+                                               Function<Dron, OperacionesDron> fabricaReceptor) {
         return new DronAdaptador(
                 new RegistrarDronServicio(repositorio),
                 new ListarDronesServicio(repositorio),
@@ -69,7 +93,9 @@ public class AppDron extends Application {
                 new EliminarDronServicio(repositorio),
                 consultarClima,
                 notificador,
-                evaluador);
+                evaluador,
+                programador,
+                fabricaReceptor);
     }
 
     /**
@@ -92,17 +118,21 @@ public class AppDron extends Application {
                 notificador);
         EvaluarViabilidadVueloUseCase evaluador = new EvaluarViabilidadVueloServicio();
 
-        // 3. Servicios y adaptador de entrada.
-        DronAdaptador adaptador = crearAdaptador(repositorio, consultarClima, notificador, evaluador);
+        // 3. Misión (patrón Command): invoker y fábrica de receptores.
+        ProgramarMisionUseCase programador = new ProgramadorTareas();
 
-        // 4. La vista recibe el adaptador por su constructor.
+        // 4. Servicios y adaptador de entrada.
+        DronAdaptador adaptador = crearAdaptador(repositorio, consultarClima, notificador,
+                evaluador, programador, DroneOperacionService::new);
+
+        // 5. La vista recibe el adaptador por su constructor.
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/co/edu/poli/sw2/vista/DrownView.fxml"));
         loader.setControllerFactory(tipo -> new DronTecnologia(adaptador));
         Parent root = loader.load();
         DronTecnologia vista = loader.getController();
 
-        // 5. Observadores fijos del clima; los drones se suscriben desde la vista.
+        // 6. Observadores fijos del clima; los drones se suscriben desde la vista.
         notificador.subscribe(new DashboardObserver(vista::mostrarClima));
         notificador.subscribe(new LoggerObserver());
         notificador.subscribe(new ConsoleObserver());

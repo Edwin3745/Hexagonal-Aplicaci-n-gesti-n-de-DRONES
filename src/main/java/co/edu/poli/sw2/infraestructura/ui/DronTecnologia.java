@@ -1,6 +1,8 @@
 package co.edu.poli.sw2.infraestructura.ui;
 
 import co.edu.poli.sw2.aplicacion.puerto.entrada.OperacionFallidaException;
+import co.edu.poli.sw2.dominio.command.ResultadoTarea;
+import co.edu.poli.sw2.dominio.command.TipoTarea;
 import co.edu.poli.sw2.dominio.modelo.Agricultura;
 import co.edu.poli.sw2.dominio.modelo.Dron;
 import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
@@ -12,6 +14,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.StringConverter;
+
+import java.util.List;
 
 /**
  * Tecnología de la interfaz: controlador JavaFX de la pantalla de drones.
@@ -325,6 +329,54 @@ public class DronTecnologia {
      */
     private void mostrarLinea(String linea) {
         txtClima.appendText(linea + System.lineSeparator());
+    }
+
+    // ------------------------------------------------------------------
+    // Misión (patrón Command)
+    // ------------------------------------------------------------------
+
+    /** Programa la tarea "tomar fotografía" para el dron seleccionado. */
+    @FXML public void programarFotografia()  { programarTarea(TipoTarea.FOTOGRAFIA); }
+
+    /** Programa la tarea "escanear zona" para el dron seleccionado. */
+    @FXML public void programarEscaneo()     { programarTarea(TipoTarea.ESCANEO); }
+
+    /** Programa la tarea "medir temperatura" para el dron seleccionado. */
+    @FXML public void programarTemperatura() { programarTarea(TipoTarea.TEMPERATURA); }
+
+    private void programarTarea(TipoTarea tipo) {
+        Dron seleccionado = tablaDrones.getSelectionModel().getSelectedItem();
+        try {
+            adaptador.programarTarea(seleccionado, tipo);
+            List<String> pendientes = adaptador.tareasPendientes();
+            mostrarLinea("Tarea programada (" + pendientes.size() + " en cola): "
+                    + pendientes.get(pendientes.size() - 1));
+        } catch (OperacionFallidaException e) {
+            mostrarAlerta(e.getMessage());
+        }
+    }
+
+    /** Ejecuta las tareas programadas en el orden registrado y muestra los resultados. */
+    @FXML
+    public void ejecutarMision() {
+        try {
+            List<ResultadoTarea> resultados = adaptador.ejecutarMision();
+            mostrarLinea("");
+            mostrarLinea("=== Resultados de la misión ===");
+            int n = 1;
+            for (ResultadoTarea r : resultados) {
+                mostrarLinea(n++ + ". " + r);
+            }
+        } catch (OperacionFallidaException e) {
+            mostrarAlerta(e.getMessage());
+        }
+    }
+
+    /** Descarta las tareas pendientes. */
+    @FXML
+    public void cancelarMision() {
+        adaptador.cancelarMision();
+        mostrarLinea("Misión cancelada: se descartaron las tareas pendientes.");
     }
 
     // ------------------------------------------------------------------
