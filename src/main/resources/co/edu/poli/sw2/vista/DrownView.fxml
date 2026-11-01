@@ -87,6 +87,20 @@
                 <Button text="Suscribir dron" onAction="#suscribirDron"/>
                 <Button text="Desuscribir dron" onAction="#desuscribirDron"/>
             </HBox>
+
+            <Separator/>
+
+            <!-- Misión (patrón Command) -->
+            <Label text="Misión (Command)"/>
+            <HBox spacing="8">
+                <Button text="Tomar foto" onAction="#programarFotografia"/>
+                <Button text="Escanear zona" onAction="#programarEscaneo"/>
+                <Button text="Medir temp." onAction="#programarTemperatura"/>
+            </HBox>
+            <HBox spacing="8">
+                <Button text="Ejecutar misión" onAction="#ejecutarMision"/>
+                <Button text="Cancelar" onAction="#cancelarMision"/>
+            </HBox>
         </VBox>
     </left>
 
