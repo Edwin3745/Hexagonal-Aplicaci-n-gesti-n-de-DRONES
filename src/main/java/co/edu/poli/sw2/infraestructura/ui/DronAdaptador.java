@@ -7,6 +7,7 @@ import co.edu.poli.sw2.aplicacion.puerto.entrada.ListarDronesUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.OperacionFallidaException;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.RegistrarDronUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.mision.ProgramarMisionUseCase;
+import co.edu.poli.sw2.aplicacion.puerto.entrada.strategy.CalcularConsumoUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.weather.EvaluarViabilidadVueloUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.weather.GetWeatherByCityUseCase;
 import co.edu.poli.sw2.aplicacion.observer.FlightStatusObserver;
@@ -22,6 +23,7 @@ import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
 import co.edu.poli.sw2.dominio.modelo.Agricultura;
 import co.edu.poli.sw2.dominio.modelo.Dron;
 import co.edu.poli.sw2.dominio.modelo.Vigilancia;
+import co.edu.poli.sw2.dominio.strategy.ConsumoStrategy;
 import co.edu.poli.sw2.dominio.weather.Weather;
 
 import java.util.HashMap;
@@ -56,6 +58,7 @@ public class DronAdaptador {
     private final EvaluarViabilidadVueloUseCase evaluador;
     private final ProgramarMisionUseCase programador;
     private final Function<Dron, OperacionesDron> fabricaReceptor;
+    private final CalcularConsumoUseCase calcularConsumo;
 
     /** Observador de cada dron suscrito, por id, para poder desuscribirlo. */
     private final Map<Integer, FlightStatusObserver> dronesSuscritos = new HashMap<>();
@@ -73,6 +76,7 @@ public class DronAdaptador {
      * @param evaluador      caso de uso que evalúa el clima con la cadena.
      * @param programador    caso de uso que programa y ejecuta las tareas de la misión.
      * @param fabricaReceptor crea el receptor (operaciones) de un dron concreto.
+     * @param calcularConsumo caso de uso que estima la batería de una ruta.
      */
     public DronAdaptador(RegistrarDronUseCase registrar,
                          ListarDronesUseCase listarTodos,
@@ -83,7 +87,8 @@ public class DronAdaptador {
                          WeatherNotificationService notificador,
                          EvaluarViabilidadVueloUseCase evaluador,
                          ProgramarMisionUseCase programador,
-                         Function<Dron, OperacionesDron> fabricaReceptor) {
+                         Function<Dron, OperacionesDron> fabricaReceptor,
+                         CalcularConsumoUseCase calcularConsumo) {
         this.registrar = registrar;
         this.listarTodos = listarTodos;
         this.listarUno = listarUno;
@@ -94,6 +99,7 @@ public class DronAdaptador {
         this.evaluador = evaluador;
         this.programador = programador;
         this.fabricaReceptor = fabricaReceptor;
+        this.calcularConsumo = calcularConsumo;
     }
 
     /**
@@ -256,5 +262,29 @@ public class DronAdaptador {
     /** Descarta las tareas pendientes. */
     public void cancelarMision() {
         programador.limpiar();
+    }
+
+    // ------------------------------------------------------------------
+    // Consumo de batería (patrón Strategy)
+    // ------------------------------------------------------------------
+
+    /**
+     * Estima la batería que el dron necesita para recorrer la ruta del
+     * archivo JSON con la estrategia de consumo elegida.
+     *
+     * @param dron       dron seleccionado.
+     * @param estrategia estrategia de consumo elegida.
+     * @return texto con la distancia, la estrategia y la batería requerida.
+     * @throws OperacionFallidaException si no se puede leer la ruta.
+     */
+    public String calcularConsumo(Dron dron, ConsumoStrategy estrategia) {
+        calcularConsumo.setEstrategia(estrategia);
+        double distanciaKm = calcularConsumo.calcularDistanciaKm();
+        double bateria = calcularConsumo.calcularConsumo();
+        return String.format("Dron %s%n"
+                        + "  Distancia origen → destino: %.2f km%n"
+                        + "  Estrategia: %s%n"
+                        + "  Batería requerida: %.2f %%",
+                dron.getSerial(), distanciaKm, estrategia.getNombre(), bateria);
     }
 }

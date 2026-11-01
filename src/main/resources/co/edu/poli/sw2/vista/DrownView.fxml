@@ -14,6 +14,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ScrollPane?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -28,7 +29,8 @@
         </Label>
     </top>
 
-    <left>
+        <left>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefWidth="350">
         <VBox spacing="10" styleClass="panel-formulario">
             <padding>
                 <Insets top="10" left="15" bottom="10" right="15"/>
@@ -90,6 +92,15 @@
 
             <Separator/>
 
+            <!-- Consumo de batería (patrón Strategy) -->
+            <Label text="Consumo (Strategy)"/>
+            <HBox spacing="8">
+                <ComboBox fx:id="cmbEstrategia" prefWidth="180" promptText="Estrategia"/>
+                <Button text="Calcular consumo" onAction="#calcularConsumo"/>
+            </HBox>
+
+            <Separator/>
+
             <!-- Misión (patrón Command) -->
             <Label text="Misión (Command)"/>
             <HBox spacing="8">
@@ -101,7 +112,8 @@
                 <Button text="Ejecutar misión" onAction="#ejecutarMision"/>
                 <Button text="Cancelar" onAction="#cancelarMision"/>
             </HBox>
-        </VBox>
+                </VBox>
+        </ScrollPane>
     </left>
 
     <center>

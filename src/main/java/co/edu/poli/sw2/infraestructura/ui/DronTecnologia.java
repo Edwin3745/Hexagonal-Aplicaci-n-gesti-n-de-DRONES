@@ -7,6 +7,10 @@ import co.edu.poli.sw2.dominio.modelo.Agricultura;
 import co.edu.poli.sw2.dominio.modelo.Dron;
 import co.edu.poli.sw2.dominio.enumeracion.TipoDron;
 import co.edu.poli.sw2.dominio.modelo.Vigilancia;
+import co.edu.poli.sw2.dominio.strategy.AhorroStrategy;
+import co.edu.poli.sw2.dominio.strategy.AltoRendimientoStrategy;
+import co.edu.poli.sw2.dominio.strategy.ConsumoStrategy;
+import co.edu.poli.sw2.dominio.strategy.NormalStrategy;
 import co.edu.poli.sw2.dominio.weather.Weather;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -54,6 +58,8 @@ public class DronTecnologia {
     @FXML private TextField txtCiudad;
     @FXML private TextArea txtClima;
 
+    @FXML private ComboBox<ConsumoStrategy> cmbEstrategia;
+
     /** Adaptador de entrada al que se delega cada acción del usuario. */
     private final DronAdaptador adaptador;
     private final ObservableList<Dron> listaDrones = FXCollections.observableArrayList();
@@ -70,6 +76,7 @@ public class DronTecnologia {
     @FXML
     public void initialize() {
         configurarComboTipo();
+        configurarComboEstrategia();
         configurarTabla();
         actualizarTabla();
     }
@@ -128,6 +135,26 @@ public class DronTecnologia {
         lblDeteccionTermica.setManaged(esVigilancia);
         chkDeteccionTermica.setVisible(esVigilancia);
         chkDeteccionTermica.setManaged(esVigilancia);
+    }
+
+    /**
+     * Puebla el selector con las tres estrategias de consumo, mostrando su
+     * nombre. No se preselecciona ninguna: el usuario debe elegirla.
+     */
+    private void configurarComboEstrategia() {
+        cmbEstrategia.setItems(FXCollections.observableArrayList(
+                new AhorroStrategy(), new NormalStrategy(), new AltoRendimientoStrategy()));
+        cmbEstrategia.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(ConsumoStrategy estrategia) {
+                return estrategia == null ? "" : estrategia.getNombre();
+            }
+
+            @Override
+            public ConsumoStrategy fromString(String texto) {
+                return null;
+            }
+        });
     }
 
     private void configurarTabla() {
@@ -329,6 +356,34 @@ public class DronTecnologia {
      */
     private void mostrarLinea(String linea) {
         txtClima.appendText(linea + System.lineSeparator());
+    }
+
+    // ------------------------------------------------------------------
+    // Consumo de batería (patrón Strategy)
+    // ------------------------------------------------------------------
+
+    /**
+     * Calcula la batería que necesita el dron seleccionado para recorrer la
+     * ruta del archivo JSON con la estrategia elegida.
+     */
+    @FXML
+    public void calcularConsumo() {
+        Dron seleccionado = tablaDrones.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta("Selecciona un dron de la tabla para calcular su consumo.");
+            return;
+        }
+        ConsumoStrategy estrategia = cmbEstrategia.getValue();
+        if (estrategia == null) {
+            mostrarAlerta("Selecciona una estrategia de consumo.");
+            return;
+        }
+        try {
+            mostrarLinea("");
+            mostrarLinea(adaptador.calcularConsumo(seleccionado, estrategia));
+        } catch (OperacionFallidaException e) {
+            mostrarAlerta(e.getMessage());
+        }
     }
 
     // ------------------------------------------------------------------
