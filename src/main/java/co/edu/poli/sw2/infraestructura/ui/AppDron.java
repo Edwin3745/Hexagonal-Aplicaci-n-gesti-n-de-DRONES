@@ -1,8 +1,14 @@
 package co.edu.poli.sw2.infraestructura.ui;
 
+import co.edu.poli.sw2.aplicacion.mediator.MissionCoordinator;
+import co.edu.poli.sw2.aplicacion.mediator.components.BatterySystem;
+import co.edu.poli.sw2.aplicacion.mediator.components.CommunicationSystem;
+import co.edu.poli.sw2.aplicacion.mediator.components.NavigationSystem;
+import co.edu.poli.sw2.aplicacion.mediator.components.SensorSystem;
 import co.edu.poli.sw2.aplicacion.observer.ConsoleObserver;
 import co.edu.poli.sw2.aplicacion.observer.DashboardObserver;
 import co.edu.poli.sw2.aplicacion.observer.LoggerObserver;
+import co.edu.poli.sw2.aplicacion.puerto.entrada.mediator.ExecuteMissionUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.mision.ProgramarMisionUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.strategy.CalcularConsumoUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.weather.EvaluarViabilidadVueloUseCase;
@@ -13,6 +19,7 @@ import co.edu.poli.sw2.aplicacion.servicio.EliminarDronServicio;
 import co.edu.poli.sw2.aplicacion.servicio.ListarDronServicio;
 import co.edu.poli.sw2.aplicacion.servicio.ListarDronesServicio;
 import co.edu.poli.sw2.aplicacion.servicio.RegistrarDronServicio;
+import co.edu.poli.sw2.aplicacion.servicio.mediator.MissionService;
 import co.edu.poli.sw2.aplicacion.servicio.mision.DroneOperacionService;
 import co.edu.poli.sw2.aplicacion.servicio.mision.ProgramadorTareas;
 import co.edu.poli.sw2.aplicacion.servicio.strategy.CalcularConsumoServicio;
@@ -91,6 +98,25 @@ public class AppDron extends Application {
                                                ProgramarMisionUseCase programador,
                                                Function<Dron, OperacionesDron> fabricaReceptor,
                                                CalcularConsumoUseCase calcularConsumo) {
+        return crearAdaptador(repositorio, consultarClima, notificador, evaluador,
+                programador, fabricaReceptor, calcularConsumo, null);
+    }
+
+    /**
+     * Igual que la anterior, pero permite inyectar también el caso de uso de
+     * la misión de vigilancia (patrón Mediator).
+     *
+     * @param misionVigilancia caso de uso que ejecuta la misión coordinada por el Mediator.
+     * @return adaptador de entrada listo para usarse.
+     */
+    public static DronAdaptador crearAdaptador(DronRepository repositorio,
+                                               GetWeatherByCityUseCase consultarClima,
+                                               WeatherNotificationService notificador,
+                                               EvaluarViabilidadVueloUseCase evaluador,
+                                               ProgramarMisionUseCase programador,
+                                               Function<Dron, OperacionesDron> fabricaReceptor,
+                                               CalcularConsumoUseCase calcularConsumo,
+                                               ExecuteMissionUseCase misionVigilancia) {
         return new DronAdaptador(
                 new RegistrarDronServicio(repositorio),
                 new ListarDronesServicio(repositorio),
@@ -102,7 +128,8 @@ public class AppDron extends Application {
                 evaluador,
                 programador,
                 fabricaReceptor,
-                calcularConsumo);
+                calcularConsumo,
+                misionVigilancia);
     }
 
     /**
@@ -132,18 +159,25 @@ public class AppDron extends Application {
         CalcularConsumoUseCase calcularConsumo = new CalcularConsumoServicio(
                 new JsonRutaLoader(Path.of("ruta.json")), new HaversineUtil());
 
-        // 5. Servicios y adaptador de entrada.
-        DronAdaptador adaptador = crearAdaptador(repositorio, consultarClima, notificador,
-                evaluador, programador, DroneOperacionService::new, calcularConsumo);
+        // 5. Misión de vigilancia (patrón Mediator): componentes, coordinador y servicio.
+        //    Los componentes no se conocen entre sí; el coordinador los registra a todos.
+        MissionCoordinator coordinador = new MissionCoordinator(
+                new NavigationSystem(), new SensorSystem(),
+                new BatterySystem(), new CommunicationSystem());
+        ExecuteMissionUseCase mision = new MissionService(coordinador);
 
-        // 6. La vista recibe el adaptador por su constructor.
+        // 6. Servicios y adaptador de entrada.
+        DronAdaptador adaptador = crearAdaptador(repositorio, consultarClima, notificador,
+                evaluador, programador, DroneOperacionService::new, calcularConsumo, mision);
+
+        // 7. La vista recibe el adaptador por su constructor.
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/co/edu/poli/sw2/vista/DrownView.fxml"));
         loader.setControllerFactory(tipo -> new DronTecnologia(adaptador));
         Parent root = loader.load();
         DronTecnologia vista = loader.getController();
 
-        // 7. Observadores fijos del clima; los drones se suscriben desde la vista.
+        // 8. Observadores fijos del clima; los drones se suscriben desde la vista.
         notificador.subscribe(new DashboardObserver(vista::mostrarClima));
         notificador.subscribe(new LoggerObserver());
         notificador.subscribe(new ConsoleObserver());

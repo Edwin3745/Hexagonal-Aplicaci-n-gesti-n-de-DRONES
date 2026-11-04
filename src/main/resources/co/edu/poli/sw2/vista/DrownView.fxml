@@ -112,6 +112,14 @@
                 <Button text="Ejecutar misión" onAction="#ejecutarMision"/>
                 <Button text="Cancelar" onAction="#cancelarMision"/>
             </HBox>
+
+            <Separator/>
+
+            <!-- Misión de vigilancia (patrón Mediator) -->
+            <Label text="Vigilancia (Mediator)"/>
+            <HBox spacing="8">
+                <Button text="Iniciar misión (dron seleccionado)" onAction="#iniciarMisionVigilancia"/>
+            </HBox>
                 </VBox>
         </ScrollPane>
     </left>

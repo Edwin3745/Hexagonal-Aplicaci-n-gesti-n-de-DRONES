@@ -435,6 +435,31 @@ public class DronTecnologia {
     }
 
     // ------------------------------------------------------------------
+    // Misión de vigilancia (patrón Mediator)
+    // ------------------------------------------------------------------
+
+    /** Inicia la misión de vigilancia del dron seleccionado y muestra la bitácora. */
+    @FXML
+    public void iniciarMisionVigilancia() {
+        Dron seleccionado = tablaDrones.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta("Selecciona un dron de la tabla para iniciar la misión de vigilancia.");
+            return;
+        }
+        try {
+            List<ResultadoTarea> bitacora = adaptador.iniciarMisionVigilancia(seleccionado);
+            mostrarLinea("");
+            mostrarLinea("=== Misión de vigilancia (Mediator) · dron " + seleccionado.getSerial() + " ===");
+            int n = 1;
+            for (ResultadoTarea r : bitacora) {
+                mostrarLinea(n++ + ". " + r);
+            }
+        } catch (OperacionFallidaException e) {
+            mostrarAlerta(e.getMessage());
+        }
+    }
+
+    // ------------------------------------------------------------------
     // Apoyo
     // ------------------------------------------------------------------
 

@@ -6,6 +6,7 @@ import co.edu.poli.sw2.aplicacion.puerto.entrada.ListarDronUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.ListarDronesUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.OperacionFallidaException;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.RegistrarDronUseCase;
+import co.edu.poli.sw2.aplicacion.puerto.entrada.mediator.ExecuteMissionUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.mision.ProgramarMisionUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.strategy.CalcularConsumoUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.weather.EvaluarViabilidadVueloUseCase;
@@ -59,6 +60,7 @@ public class DronAdaptador {
     private final ProgramarMisionUseCase programador;
     private final Function<Dron, OperacionesDron> fabricaReceptor;
     private final CalcularConsumoUseCase calcularConsumo;
+    private final ExecuteMissionUseCase misionVigilancia;
 
     /** Observador de cada dron suscrito, por id, para poder desuscribirlo. */
     private final Map<Integer, FlightStatusObserver> dronesSuscritos = new HashMap<>();
@@ -77,6 +79,7 @@ public class DronAdaptador {
      * @param programador    caso de uso que programa y ejecuta las tareas de la misión.
      * @param fabricaReceptor crea el receptor (operaciones) de un dron concreto.
      * @param calcularConsumo caso de uso que estima la batería de una ruta.
+     * @param misionVigilancia caso de uso que ejecuta la misión coordinada por el Mediator.
      */
     public DronAdaptador(RegistrarDronUseCase registrar,
                          ListarDronesUseCase listarTodos,
@@ -88,7 +91,8 @@ public class DronAdaptador {
                          EvaluarViabilidadVueloUseCase evaluador,
                          ProgramarMisionUseCase programador,
                          Function<Dron, OperacionesDron> fabricaReceptor,
-                         CalcularConsumoUseCase calcularConsumo) {
+                         CalcularConsumoUseCase calcularConsumo,
+                         ExecuteMissionUseCase misionVigilancia) {
         this.registrar = registrar;
         this.listarTodos = listarTodos;
         this.listarUno = listarUno;
@@ -100,6 +104,7 @@ public class DronAdaptador {
         this.programador = programador;
         this.fabricaReceptor = fabricaReceptor;
         this.calcularConsumo = calcularConsumo;
+        this.misionVigilancia = misionVigilancia;
     }
 
     /**
@@ -286,5 +291,28 @@ public class DronAdaptador {
                         + "  Estrategia: %s%n"
                         + "  Batería requerida: %.2f %%",
                 dron.getSerial(), distanciaKm, estrategia.getNombre(), bateria);
+    }
+
+    // ------------------------------------------------------------------
+    // Misión de vigilancia (patrón Mediator)
+    // ------------------------------------------------------------------
+
+    /**
+     * Inicia una operación de vigilancia. El adaptador no sabe cómo se
+     * coordinan navegación, sensores, batería y comunicación: solo invoca el
+     * caso de uso, que delega en el Mediator. No usa el CRUD de drones.
+     *
+     * @param dron dron seleccionado en la tabla; es obligatorio.
+     * @return bitácora con un resultado por cada paso de la operación.
+     * @throws OperacionFallidaException si falta el dron o el caso de uso no está configurado.
+     */
+    public List<ResultadoTarea> iniciarMisionVigilancia(Dron dron) {
+        if (dron == null) {
+            throw new OperacionFallidaException("Selecciona un dron de la tabla para iniciar la misión.");
+        }
+        if (misionVigilancia == null) {
+            throw new OperacionFallidaException("La misión de vigilancia no está configurada.");
+        }
+        return misionVigilancia.executeMission(dron);
     }
 }
