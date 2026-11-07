@@ -120,6 +120,20 @@
             <HBox spacing="8">
                 <Button text="Iniciar misión (dron seleccionado)" onAction="#iniciarMisionVigilancia"/>
             </HBox>
+
+            <Separator/>
+
+            <!-- Estado operativo (patrón State) -->
+            <Label text="Estado (State)"/>
+            <HBox spacing="8">
+                <Button text="Encender" onAction="#encenderDron"/>
+                <Button text="Despegar" onAction="#despegarDron"/>
+                <Button text="Aterrizar" onAction="#aterrizarDron"/>
+            </HBox>
+            <HBox spacing="8">
+                <Button text="Finalizar aterrizaje" onAction="#finalizarAterrizaje"/>
+                <Button text="Apagar" onAction="#apagarDron"/>
+            </HBox>
                 </VBox>
         </ScrollPane>
     </left>
@@ -133,6 +147,7 @@
                 <TableColumn fx:id="colModelo" text="Modelo" prefWidth="110"/>
                 <TableColumn fx:id="colFabricante" text="Fabricante" prefWidth="120"/>
                 <TableColumn fx:id="colPeso" text="Peso (kg)" prefWidth="80"/>
+                <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
             </columns>
             <BorderPane.margin>
                 <Insets top="10" left="10" bottom="10" right="15"/>

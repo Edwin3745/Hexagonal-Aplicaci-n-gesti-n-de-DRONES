@@ -20,6 +20,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.StringConverter;
 
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Tecnología de la interfaz: controlador JavaFX de la pantalla de drones.
@@ -54,6 +55,7 @@ public class DronTecnologia {
     @FXML private TableColumn<Dron, String> colModelo;
     @FXML private TableColumn<Dron, String> colFabricante;
     @FXML private TableColumn<Dron, Double> colPeso;
+    @FXML private TableColumn<Dron, String> colEstado;
 
     @FXML private TextField txtCiudad;
     @FXML private TextArea txtClima;
@@ -169,6 +171,11 @@ public class DronTecnologia {
         colTipo.setCellValueFactory(fila ->
                 new javafx.beans.property.SimpleStringProperty(
                         fila.getValue().getTipo().getCodigo()));
+
+        // El estado operativo no está en Dron: se consulta al caso de uso (patrón State).
+        colEstado.setCellValueFactory(fila ->
+                new javafx.beans.property.SimpleStringProperty(
+                        adaptador.estadoDe(fila.getValue())));
 
         tablaDrones.setItems(listaDrones);
 
@@ -454,6 +461,40 @@ public class DronTecnologia {
             for (ResultadoTarea r : bitacora) {
                 mostrarLinea(n++ + ". " + r);
             }
+        } catch (OperacionFallidaException e) {
+            mostrarAlerta(e.getMessage());
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Estado operativo (patrón State)
+    // ------------------------------------------------------------------
+
+    @FXML public void encenderDron()        { cambiarEstado("encender", adaptador::encenderDron); }
+
+    @FXML public void apagarDron()          { cambiarEstado("apagar", adaptador::apagarDron); }
+
+    @FXML public void despegarDron()        { cambiarEstado("despegar", adaptador::despegarDron); }
+
+    @FXML public void aterrizarDron()       { cambiarEstado("aterrizar", adaptador::aterrizarDron); }
+
+    @FXML public void finalizarAterrizaje() { cambiarEstado("finalizar aterrizaje", adaptador::finalizarAterrizaje); }
+
+    /**
+     * Aplica la operación al dron seleccionado, muestra el nuevo estado y
+     * refresca la tabla para que la columna Estado se actualice. Si el estado
+     * actual no permite la operación, muestra el mensaje del rechazo.
+     */
+    private void cambiarEstado(String accion, Function<Dron, String> operacion) {
+        Dron seleccionado = tablaDrones.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta("Selecciona un dron de la tabla para cambiar su estado.");
+            return;
+        }
+        try {
+            String nuevoEstado = operacion.apply(seleccionado);
+            mostrarLinea("Dron " + seleccionado.getSerial() + ": " + accion + " → " + nuevoEstado);
+            tablaDrones.refresh();
         } catch (OperacionFallidaException e) {
             mostrarAlerta(e.getMessage());
         }

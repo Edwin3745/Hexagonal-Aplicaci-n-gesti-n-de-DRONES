@@ -8,6 +8,7 @@ import co.edu.poli.sw2.aplicacion.puerto.entrada.OperacionFallidaException;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.RegistrarDronUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.mediator.ExecuteMissionUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.mision.ProgramarMisionUseCase;
+import co.edu.poli.sw2.aplicacion.puerto.entrada.state.ManageDroneStateUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.strategy.CalcularConsumoUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.weather.EvaluarViabilidadVueloUseCase;
 import co.edu.poli.sw2.aplicacion.puerto.entrada.weather.GetWeatherByCityUseCase;
@@ -61,6 +62,7 @@ public class DronAdaptador {
     private final Function<Dron, OperacionesDron> fabricaReceptor;
     private final CalcularConsumoUseCase calcularConsumo;
     private final ExecuteMissionUseCase misionVigilancia;
+    private final ManageDroneStateUseCase estados;
 
     /** Observador de cada dron suscrito, por id, para poder desuscribirlo. */
     private final Map<Integer, FlightStatusObserver> dronesSuscritos = new HashMap<>();
@@ -80,6 +82,7 @@ public class DronAdaptador {
      * @param fabricaReceptor crea el receptor (operaciones) de un dron concreto.
      * @param calcularConsumo caso de uso que estima la batería de una ruta.
      * @param misionVigilancia caso de uso que ejecuta la misión coordinada por el Mediator.
+     * @param estados        caso de uso que gestiona el estado operativo (patrón State).
      */
     public DronAdaptador(RegistrarDronUseCase registrar,
                          ListarDronesUseCase listarTodos,
@@ -92,7 +95,8 @@ public class DronAdaptador {
                          ProgramarMisionUseCase programador,
                          Function<Dron, OperacionesDron> fabricaReceptor,
                          CalcularConsumoUseCase calcularConsumo,
-                         ExecuteMissionUseCase misionVigilancia) {
+                         ExecuteMissionUseCase misionVigilancia,
+                         ManageDroneStateUseCase estados) {
         this.registrar = registrar;
         this.listarTodos = listarTodos;
         this.listarUno = listarUno;
@@ -105,6 +109,7 @@ public class DronAdaptador {
         this.fabricaReceptor = fabricaReceptor;
         this.calcularConsumo = calcularConsumo;
         this.misionVigilancia = misionVigilancia;
+        this.estados = estados;
     }
 
     /**
@@ -314,5 +319,50 @@ public class DronAdaptador {
             throw new OperacionFallidaException("La misión de vigilancia no está configurada.");
         }
         return misionVigilancia.executeMission(dron);
+    }
+
+    // ------------------------------------------------------------------
+    // Estado operativo (patrón State)
+    // ------------------------------------------------------------------
+
+    /**
+     * Cada operación delega en el caso de uso; el estado actual del dron
+     * decide si está permitida.
+     *
+     * @param dron dron seleccionado en la tabla.
+     * @return nombre del nuevo estado.
+     * @throws OperacionFallidaException si falta el dron o la operación no
+     *                                   está permitida en el estado actual.
+     */
+    public String encenderDron(Dron dron) {
+        return estados.encender(dron);
+    }
+
+    /** @see #encenderDron(Dron) */
+    public String apagarDron(Dron dron) {
+        return estados.apagar(dron);
+    }
+
+    /** @see #encenderDron(Dron) */
+    public String despegarDron(Dron dron) {
+        return estados.despegar(dron);
+    }
+
+    /** @see #encenderDron(Dron) */
+    public String aterrizarDron(Dron dron) {
+        return estados.aterrizar(dron);
+    }
+
+    /** @see #encenderDron(Dron) */
+    public String finalizarAterrizaje(Dron dron) {
+        return estados.finalizarAterrizaje(dron);
+    }
+
+    /**
+     * @param dron dron de la tabla.
+     * @return nombre de su estado operativo actual.
+     */
+    public String estadoDe(Dron dron) {
+        return estados.consultarEstado(dron);
     }
 }
