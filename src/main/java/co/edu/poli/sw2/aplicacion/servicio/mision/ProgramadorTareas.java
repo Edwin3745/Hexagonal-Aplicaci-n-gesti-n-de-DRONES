@@ -11,11 +11,19 @@ import java.util.List;
 /**
  * Invoker del patrón Command. Guarda los comandos en una cola y los ejecuta
  * en el orden registrado. No sabe qué hace cada comando: solo llama a ejecutar().
+ *
+ * <p>Es el servicio de aplicación que implementa
+ * {@link ProgramarMisionUseCase}.</p>
  */
 public class ProgramadorTareas implements ProgramarMisionUseCase {
 
     private final List<DroneCommand> cola = new ArrayList<>();
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws IllegalArgumentException si {@code comando} es nulo.
+     */
     @Override
     public void programar(DroneCommand comando) {
         if (comando == null) {
@@ -24,6 +32,14 @@ public class ProgramadorTareas implements ProgramarMisionUseCase {
         cola.add(comando);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>La cola se vacía antes de ejecutar, así que las tareas no se
+     * repiten en la siguiente ejecución.</p>
+     *
+     * @throws OperacionFallidaException si no hay tareas programadas.
+     */
     @Override
     public List<ResultadoTarea> ejecutar() {
         if (cola.isEmpty()) {
@@ -39,6 +55,7 @@ public class ProgramadorTareas implements ProgramarMisionUseCase {
         return resultados;
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<String> listarPendientes() {
         List<String> nombres = new ArrayList<>();
@@ -48,6 +65,7 @@ public class ProgramadorTareas implements ProgramarMisionUseCase {
         return nombres;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void limpiar() {
         cola.clear();

@@ -44,9 +44,14 @@ import java.util.function.Function;
  * en {@code DronTecnologia}, y este adaptador serviría igual para otra
  * interfaz distinta.</p>
  *
- * <p>Solo conoce los puertos de entrada y el dominio. No sabe qué servicio
- * implementa cada caso de uso ni qué base de datos hay detrás: las
- * dependencias se las entrega {@code AppDron} al construirlo.</p>
+ * <p>Conoce los puertos de entrada y el dominio; de la capa de aplicación solo
+ * usa además, para el patrón Observer, el notificador del clima y
+ * {@link FlightStatusObserver}. No sabe qué servicio implementa cada caso de
+ * uso ni qué base de datos hay detrás: las dependencias se las entrega
+ * {@code AppDron} al construirlo.</p>
+ *
+ * <p>También actúa como Client del patrón Command: crea el comando de cada
+ * tarea y se lo entrega al programador.</p>
  */
 public class DronAdaptador {
 
@@ -146,6 +151,8 @@ public class DronAdaptador {
     }
 
     /**
+     * Elimina el dron con el identificador indicado.
+     *
      * @param id identificador del dron.
      * @return {@code true} si se eliminó.
      * @throws OperacionFallidaException si la operación no puede completarse.
@@ -155,6 +162,8 @@ public class DronAdaptador {
     }
 
     /**
+     * Consulta un dron por su identificador.
+     *
      * @param id identificador del dron.
      * @return el dron encontrado, o {@code null} si no existe.
      * @throws OperacionFallidaException si la consulta no puede completarse.
@@ -164,6 +173,8 @@ public class DronAdaptador {
     }
 
     /**
+     * Obtiene todos los drones registrados.
+     *
      * @return lista de drones, vacía si no hay ninguno.
      * @throws OperacionFallidaException si la consulta no puede completarse.
      */
@@ -172,6 +183,8 @@ public class DronAdaptador {
     }
 
     /**
+     * Guarda los cambios de un dron existente.
+     *
      * @param dron dron con los datos actualizados.
      * @return {@code true} si se actualizó.
      * @throws OperacionFallidaException si la operación no puede completarse.
@@ -254,7 +267,11 @@ public class DronAdaptador {
         programador.programar(comando);
     }
 
-    /** @return nombres de las tareas pendientes, en orden. */
+    /**
+     * Consulta las tareas programadas que aún no se han ejecutado.
+     *
+     * @return nombres de las tareas pendientes, en orden.
+     */
     public List<String> tareasPendientes() {
         return programador.listarPendientes();
     }
@@ -326,8 +343,10 @@ public class DronAdaptador {
     // ------------------------------------------------------------------
 
     /**
-     * Cada operación delega en el caso de uso; el estado actual del dron
-     * decide si está permitida.
+     * Enciende el dron.
+     *
+     * <p>Esta operación y las cuatro siguientes delegan en el caso de uso; el
+     * estado actual del dron decide si está permitida.</p>
      *
      * @param dron dron seleccionado en la tabla.
      * @return nombre del nuevo estado.
@@ -338,29 +357,65 @@ public class DronAdaptador {
         return estados.encender(dron);
     }
 
-    /** @see #encenderDron(Dron) */
+    /**
+     * Apaga el dron.
+     *
+     * @param dron dron seleccionado en la tabla.
+     * @return nombre del nuevo estado.
+     * @throws OperacionFallidaException si falta el dron o la operación no
+     *                                   está permitida en el estado actual.
+     * @see #encenderDron(Dron)
+     */
     public String apagarDron(Dron dron) {
         return estados.apagar(dron);
     }
 
-    /** @see #encenderDron(Dron) */
+    /**
+     * Hace despegar el dron.
+     *
+     * @param dron dron seleccionado en la tabla.
+     * @return nombre del nuevo estado.
+     * @throws OperacionFallidaException si falta el dron o la operación no
+     *                                   está permitida en el estado actual.
+     * @see #encenderDron(Dron)
+     */
     public String despegarDron(Dron dron) {
         return estados.despegar(dron);
     }
 
-    /** @see #encenderDron(Dron) */
+    /**
+     * Inicia el aterrizaje del dron.
+     *
+     * @param dron dron seleccionado en la tabla.
+     * @return nombre del nuevo estado.
+     * @throws OperacionFallidaException si falta el dron o la operación no
+     *                                   está permitida en el estado actual.
+     * @see #encenderDron(Dron)
+     */
     public String aterrizarDron(Dron dron) {
         return estados.aterrizar(dron);
     }
 
-    /** @see #encenderDron(Dron) */
+    /**
+     * Completa el aterrizaje del dron.
+     *
+     * @param dron dron seleccionado en la tabla.
+     * @return nombre del nuevo estado.
+     * @throws OperacionFallidaException si falta el dron o la operación no
+     *                                   está permitida en el estado actual.
+     * @see #encenderDron(Dron)
+     */
     public String finalizarAterrizaje(Dron dron) {
         return estados.finalizarAterrizaje(dron);
     }
 
     /**
+     * Consulta el estado operativo actual del dron. La vista lo usa para
+     * llenar la columna Estado de la tabla.
+     *
      * @param dron dron de la tabla.
      * @return nombre de su estado operativo actual.
+     * @throws OperacionFallidaException si el dron es {@code null}.
      */
     public String estadoDe(Dron dron) {
         return estados.consultarEstado(dron);

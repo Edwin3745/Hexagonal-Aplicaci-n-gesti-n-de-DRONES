@@ -12,10 +12,12 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Cliente de la API de Geocoding de OpenWeatherMap.
+ * Cliente HTTP de la API de Geocoding de OpenWeatherMap; forma parte del
+ * adaptador de salida {@link GeoApiAdapter}.
  *
  * <p>Hace la petición y devuelve el JSON sin interpretarlo; lo interpreta
- * {@link GeoApiAdapter}.</p>
+ * {@link GeoApiAdapter}. Traduce los errores HTTP y de red a
+ * {@link WeatherApiException}.</p>
  */
 public class GeoApiClient {
 
@@ -25,7 +27,9 @@ public class GeoApiClient {
     private final String apiKey;
 
     /**
-     * @param apiKey API key de OpenWeatherMap.
+     * Crea el cliente con la clave que se enviará en cada petición.
+     *
+     * @param apiKey API key de OpenWeatherMap (la de {@code OPENWEATHER_API_KEY}).
      */
     public GeoApiClient(String apiKey) {
         this.apiKey = apiKey;
@@ -36,7 +40,9 @@ public class GeoApiClient {
      *
      * @param city nombre de la ciudad.
      * @return JSON con un arreglo de coincidencias; vacío si la ciudad no existe.
-     * @throws WeatherApiException si la clave es inválida o no hay conexión.
+     * @throws WeatherApiException si la clave es inválida (HTTP 401), si la API
+     *                             responde con otro código distinto de 200 o si
+     *                             no hay conexión.
      */
     public String fetch(String city) {
         URI uri = URI.create(URL
@@ -54,7 +60,11 @@ public class GeoApiClient {
                 throw new WeatherApiException(Reason.UNAVAILABLE, "Geocoding respondió " + respuesta.statusCode());
             }
             return respuesta.body();
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            // Se restaura la marca de interrupción para no ocultarla al resto del programa.
+            Thread.currentThread().interrupt();
+            throw new WeatherApiException(Reason.UNAVAILABLE, "Sin conexión con Geocoding", e);
+        } catch (IOException e) {
             throw new WeatherApiException(Reason.UNAVAILABLE, "Sin conexión con Geocoding", e);
         }
     }

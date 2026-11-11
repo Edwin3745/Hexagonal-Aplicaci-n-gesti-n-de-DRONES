@@ -20,6 +20,8 @@ public class OpenWeatherAdapter implements WeatherPort {
     private final OpenWeatherClient client;
 
     /**
+     * Crea el adaptador sobre el cliente HTTP que hace las peticiones.
+     *
      * @param client cliente de la API de clima actual.
      */
     public OpenWeatherAdapter(OpenWeatherClient client) {

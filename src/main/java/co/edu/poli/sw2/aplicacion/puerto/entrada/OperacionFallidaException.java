@@ -14,6 +14,8 @@ import co.edu.poli.sw2.aplicacion.puerto.salida.RepositorioException;
 public class OperacionFallidaException extends RuntimeException {
 
     /**
+     * Crea la excepción con un mensaje para el usuario.
+     *
      * @param mensajeParaElUsuario mensaje listo para mostrarse.
      */
     public OperacionFallidaException(String mensajeParaElUsuario) {
@@ -21,6 +23,9 @@ public class OperacionFallidaException extends RuntimeException {
     }
 
     /**
+     * Crea la excepción con un mensaje para el usuario, conservando el error
+     * que la originó.
+     *
      * @param mensajeParaElUsuario mensaje listo para mostrarse.
      * @param causa                error original, conservado para depurar.
      */

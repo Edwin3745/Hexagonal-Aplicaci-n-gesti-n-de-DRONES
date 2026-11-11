@@ -3,7 +3,11 @@ package co.edu.poli.sw2.dominio.state;
 /**
  * Estado APAGADO: el dron no está operativo y solo puede encenderse.
  *
- * <p>Permite: encender → EN ESPERA.</p>
+ * <p>Permite: encender → EN ESPERA. Rechaza ({@link IllegalStateException}):
+ * apagar, despegar, aterrizar, finalizarAterrizaje.</p>
+ *
+ * <p>Estado concreto del patrón State: implementa {@link DroneState} y
+ * es usado por {@link DroneContext}.</p>
  */
 public class OffState implements DroneState {
 

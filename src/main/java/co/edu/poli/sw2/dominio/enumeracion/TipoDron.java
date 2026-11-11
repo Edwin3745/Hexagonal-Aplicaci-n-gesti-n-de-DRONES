@@ -2,22 +2,34 @@ package co.edu.poli.sw2.dominio.enumeracion;
 /**
  * Enumera los tipos concretos de dron que maneja el sistema.
  *
- * Cada constante conoce el código textual con el que se persiste en la base
+ * <p>Cada constante conoce el código textual con el que se persiste en la base
  * de datos (columna discriminadora), de modo que ese literal exista en un
- * único lugar del proyecto.
+ * único lugar del proyecto.</p>
  */
 public enum TipoDron {
 
+    /** Dron agrícola ({@code Agricultura}); código {@code "agricultura"}. */
     AGRICULTURA("agricultura"),
+    /** Dron de vigilancia ({@code Vigilancia}); código {@code "vigilancia"}. */
     VIGILANCIA("vigilancia");
 
+    /** Código textual persistido en la columna discriminadora. */
     private final String codigo;
 
+    /**
+     * Asocia la constante con su código persistido.
+     *
+     * @param codigo código textual de la columna discriminadora
+     */
     TipoDron(String codigo) {
         this.codigo = codigo;
     }
 
-    /** @return código persistido en la columna discriminadora de la BD. */
+    /**
+     * Devuelve el código con el que este tipo se guarda en la base de datos.
+     *
+     * @return código persistido en la columna discriminadora de la BD.
+     */
     public String getCodigo() {
         return codigo;
     }
@@ -25,9 +37,12 @@ public enum TipoDron {
     /**
      * Reconstruye el tipo a partir del código leído de la base de datos.
      *
+     * <p>La comparación ignora mayúsculas/minúsculas y espacios al inicio
+     * o al final.</p>
+     *
      * @param codigo valor de la columna discriminadora
      * @return constante correspondiente
-     * @throws IllegalArgumentException si el código no corresponde a ningún tipo
+     * @throws IllegalArgumentException si el código es nulo o no corresponde a ningún tipo
      */
     public static TipoDron desdeCodigo(String codigo) {
         if (codigo == null) {

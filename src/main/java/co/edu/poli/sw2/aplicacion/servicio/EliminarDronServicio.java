@@ -7,6 +7,9 @@ import co.edu.poli.sw2.aplicacion.puerto.salida.RepositorioException;
 
 /**
  * Servicio de aplicación que implementa el caso de uso de eliminar un dron.
+ *
+ * <p>Solo conoce el puerto {@link DronRepository}; los fallos del repositorio
+ * se traducen a {@link OperacionFallidaException}.</p>
  */
 public class EliminarDronServicio implements EliminarDronUseCase {
 
@@ -14,6 +17,8 @@ public class EliminarDronServicio implements EliminarDronUseCase {
     private final DronRepository repositorio;
 
     /**
+     * Crea el servicio con el puerto de persistencia que debe usar.
+     *
      * @param repositorio puerto de salida a utilizar.
      */
     public EliminarDronServicio(DronRepository repositorio) {
@@ -22,6 +27,11 @@ public class EliminarDronServicio implements EliminarDronUseCase {
 
     /**
      * {@inheritDoc}
+     *
+     * <p>Delega en el repositorio y traduce sus fallos a un mensaje para el
+     * usuario.</p>
+     *
+     * @throws OperacionFallidaException si el repositorio falla.
      */
     @Override
     public boolean eliminar(int id) {

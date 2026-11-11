@@ -24,6 +24,8 @@ public class WeatherApiException extends RuntimeException {
     private final Reason reason;
 
     /**
+     * Crea la excepción conservando el error original.
+     *
      * @param reason  motivo del fallo.
      * @param message descripción técnica del fallo.
      * @param cause   excepción original, puede ser nula.
@@ -34,6 +36,8 @@ public class WeatherApiException extends RuntimeException {
     }
 
     /**
+     * Crea la excepción sin error original.
+     *
      * @param reason  motivo del fallo.
      * @param message descripción técnica del fallo.
      */
@@ -41,7 +45,12 @@ public class WeatherApiException extends RuntimeException {
         this(reason, message, null);
     }
 
-    /** @return motivo del fallo. */
+    /**
+     * Devuelve el motivo del fallo, que la aplicación traduce a un mensaje
+     * para el usuario.
+     *
+     * @return motivo del fallo.
+     */
     public Reason getReason() {
         return reason;
     }

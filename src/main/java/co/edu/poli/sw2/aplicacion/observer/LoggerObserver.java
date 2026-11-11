@@ -13,15 +13,22 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Observador que registra cada clima recibido en {@code logs/clima.log},
- * agregando una línea con la fecha y la hora.
+ * ConcreteObserver del patrón Observer: registra cada clima recibido en
+ * {@code logs/clima.log}, agregando una línea con la fecha y la hora.
  */
 public class LoggerObserver implements WeatherObserver {
 
     private static final Path ARCHIVO = Path.of("logs", "clima.log");
     private static final DateTimeFormatter FORMATO = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Crea la carpeta {@code logs} si no existe y agrega al final del
+     * archivo una línea {@code fecha hora | clima}.</p>
+     *
+     * @throws UncheckedIOException si no se puede escribir el archivo.
+     */
     @Override
     public void update(Weather weather) {
         String linea = LocalDateTime.now().format(FORMATO) + " | " + weather + System.lineSeparator();

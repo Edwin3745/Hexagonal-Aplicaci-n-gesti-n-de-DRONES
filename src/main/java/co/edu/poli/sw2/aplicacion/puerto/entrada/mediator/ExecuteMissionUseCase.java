@@ -5,7 +5,14 @@ import co.edu.poli.sw2.dominio.modelo.Dron;
 
 import java.util.List;
 
-/** Puerto de entrada: ejecutar una misión de vigilancia coordinada por el Mediator. */
+/**
+ * Puerto de entrada: ejecutar una misión de vigilancia coordinada por el
+ * patrón Mediator.
+ *
+ * <p>El adaptador de entrada solo invoca este contrato; quien lo implementa
+ * delega la coordinación en un
+ * {@link co.edu.poli.sw2.aplicacion.mediator.DroneMediator}.</p>
+ */
 public interface ExecuteMissionUseCase {
 
     /**

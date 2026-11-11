@@ -9,6 +9,10 @@ import co.edu.poli.sw2.dominio.strategy.ConsumoStrategy;
 /**
  * Context del patrón Strategy: guarda la estrategia de consumo elegida y la
  * aplica a la distancia de la ruta, sin saber cuál estrategia concreta es.
+ *
+ * <p>Es el servicio de aplicación que implementa
+ * {@link CalcularConsumoUseCase}. La ruta y la distancia las obtiene por los
+ * puertos de salida {@link RutaPort} y {@link DistanciaPort}.</p>
  */
 public class CalcularConsumoServicio implements CalcularConsumoUseCase {
 
@@ -17,6 +21,8 @@ public class CalcularConsumoServicio implements CalcularConsumoUseCase {
     private ConsumoStrategy estrategia;
 
     /**
+     * Crea el servicio con los puertos de salida que necesita.
+     *
      * @param ruta      puerto que entrega el origen y el destino.
      * @param distancia puerto que calcula la distancia entre dos puntos.
      */
@@ -31,7 +37,12 @@ public class CalcularConsumoServicio implements CalcularConsumoUseCase {
         this.estrategia = estrategia;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Cualquier fallo al obtener los puntos o calcular la distancia se
+     * traduce a {@link OperacionFallidaException}.</p>
+     */
     @Override
     public double calcularDistanciaKm() {
         try {

@@ -19,6 +19,8 @@ public class RegistrarDronServicio implements RegistrarDronUseCase {
     private final DronRepository repositorio;
 
     /**
+     * Crea el servicio con el puerto de persistencia que debe usar.
+     *
      * @param repositorio puerto de salida a utilizar.
      */
     public RegistrarDronServicio(DronRepository repositorio) {
@@ -27,6 +29,13 @@ public class RegistrarDronServicio implements RegistrarDronUseCase {
 
     /**
      * {@inheritDoc}
+     *
+     * <p>Valida el dron con las reglas del dominio antes de guardarlo y
+     * traduce cualquier fallo del repositorio a un mensaje para el
+     * usuario.</p>
+     *
+     * @throws OperacionFallidaException si no hay dron, sus datos no son
+     *                                   válidos o el repositorio falla.
      */
     @Override
     public void registrar(Dron dron) {

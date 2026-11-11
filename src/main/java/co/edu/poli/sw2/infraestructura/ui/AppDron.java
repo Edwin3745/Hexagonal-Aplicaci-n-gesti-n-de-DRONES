@@ -50,15 +50,20 @@ import java.nio.file.Path;
 import java.util.function.Function;
 
 /**
- * Aplicación JavaFX y punto de composición de la arquitectura hexagonal.
+ * Raíz de composición de la arquitectura hexagonal y aplicación JavaFX.
  *
- * <p>Es la única clase del sistema que conoce todas las capas. Crea el
- * adaptador de salida, los servicios de aplicación y el adaptador de entrada,
- * y los conecta entre sí. El resto de las clases solo conocen interfaces: nadie
- * más decide qué implementación concreta se usa.</p>
+ * <p>Es la única clase del sistema que conoce todas las capas. Crea los
+ * adaptadores de salida (repositorio PostgreSQL, clientes de OpenWeatherMap,
+ * lector de {@code ruta.json} y cálculo de distancia con Haversine), los
+ * servicios de aplicación (CRUD, clima, misión con Command, consumo con
+ * Strategy, vigilancia con Mediator y estado operativo con State) y el
+ * adaptador de entrada {@link DronAdaptador}, y los conecta entre sí. El resto
+ * de las clases solo conocen los puertos: nadie más decide qué implementación
+ * concreta hay detrás de cada uno.</p>
  *
- * <p>Por eso, cambiar de base de datos consiste en cambiar una sola línea de
- * esta clase: la que crea el repositorio.</p>
+ * <p>Por eso, cambiar de base de datos solo afecta a esta clase: basta con
+ * crear otro repositorio en {@link #start(Stage)} (y ajustar el cierre de la
+ * conexión en {@link #stop()}).</p>
  */
 public class AppDron extends Application {
 
@@ -66,9 +71,13 @@ public class AppDron extends Application {
      * Conecta los servicios de aplicación y el adaptador de entrada sobre el
      * repositorio indicado.
      *
-     * <p>Es el cableado de dependencias de la arquitectura. Lo usa la propia
-     * aplicación al arrancar, y también las pruebas, que así se ejecutan con
-     * la misma composición que el programa real.</p>
+     * <p>Es el cableado de dependencias de la arquitectura. Esta sobrecarga la
+     * usan las pruebas, que así se ejecutan con la misma composición que el
+     * programa real. Usa valores por defecto para el resto de dependencias: un
+     * {@link ProgramadorTareas} nuevo, {@link DroneOperacionService} como
+     * receptor de las tareas y un {@link DroneStateService} nuevo; el cálculo
+     * de consumo y la misión de vigilancia quedan sin configurar
+     * ({@code null}).</p>
      *
      * @param repositorio    adaptador de salida que usarán los servicios.
      * @param consultarClima caso de uso de consultar el clima.
@@ -86,8 +95,13 @@ public class AppDron extends Application {
 
     /**
      * Igual que la anterior, pero permite inyectar el caso de uso de misión
-     * (patrón Command) y la fábrica de receptores.
+     * (patrón Command), la fábrica de receptores y el cálculo de consumo
+     * (patrón Strategy). La misión de vigilancia queda sin configurar.
      *
+     * @param repositorio     adaptador de salida que usarán los servicios.
+     * @param consultarClima  caso de uso de consultar el clima.
+     * @param notificador     notificador del clima.
+     * @param evaluador       caso de uso que evalúa el clima con la cadena.
      * @param programador     caso de uso que programa y ejecuta las tareas.
      * @param fabricaReceptor crea el receptor de operaciones de un dron.
      * @param calcularConsumo caso de uso que estima la batería de una ruta.
@@ -106,8 +120,16 @@ public class AppDron extends Application {
 
     /**
      * Igual que la anterior, pero permite inyectar también el caso de uso de
-     * la misión de vigilancia (patrón Mediator).
+     * la misión de vigilancia (patrón Mediator). El estado operativo se
+     * gestiona con un {@link DroneStateService} nuevo.
      *
+     * @param repositorio      adaptador de salida que usarán los servicios.
+     * @param consultarClima   caso de uso de consultar el clima.
+     * @param notificador      notificador del clima.
+     * @param evaluador        caso de uso que evalúa el clima con la cadena.
+     * @param programador      caso de uso que programa y ejecuta las tareas.
+     * @param fabricaReceptor  crea el receptor de operaciones de un dron.
+     * @param calcularConsumo  caso de uso que estima la batería de una ruta.
      * @param misionVigilancia caso de uso que ejecuta la misión coordinada por el Mediator.
      * @return adaptador de entrada listo para usarse.
      */
@@ -128,7 +150,20 @@ public class AppDron extends Application {
      * Igual que la anterior, pero permite inyectar también el caso de uso que
      * gestiona el estado operativo de los drones (patrón State).
      *
-     * @param estados caso de uso que gestiona el estado operativo de los drones.
+     * <p>Es la sobrecarga que hace el trabajo: crea los cinco servicios del
+     * CRUD sobre el repositorio y los entrega, junto con el resto de casos de
+     * uso, al constructor de {@link DronAdaptador}. La usa
+     * {@link #start(Stage)} al arrancar la aplicación.</p>
+     *
+     * @param repositorio      adaptador de salida que usarán los servicios.
+     * @param consultarClima   caso de uso de consultar el clima.
+     * @param notificador      notificador del clima.
+     * @param evaluador        caso de uso que evalúa el clima con la cadena.
+     * @param programador      caso de uso que programa y ejecuta las tareas.
+     * @param fabricaReceptor  crea el receptor de operaciones de un dron.
+     * @param calcularConsumo  caso de uso que estima la batería de una ruta.
+     * @param misionVigilancia caso de uso que ejecuta la misión coordinada por el Mediator.
+     * @param estados          caso de uso que gestiona el estado operativo de los drones.
      * @return adaptador de entrada listo para usarse.
      */
     public static DronAdaptador crearAdaptador(DronRepository repositorio,
@@ -158,6 +193,13 @@ public class AppDron extends Application {
 
     /**
      * Arma la aplicación y muestra la ventana principal.
+     *
+     * <p>Crea todos los adaptadores y servicios, carga {@code DrownView.fxml}
+     * con una fábrica de controladores que entrega el adaptador de entrada a
+     * {@link DronTecnologia}, suscribe los observadores fijos del clima
+     * (tablero de la vista, registro en archivo y consola) y aplica la hoja de estilos. La API key
+     * del clima se lee de la línea {@code OPENWEATHER_API_KEY} del archivo
+     * {@code .env}.</p>
      *
      * @param stage escenario principal proporcionado por JavaFX.
      * @throws Exception si no se puede cargar la vista o sus recursos.
@@ -251,6 +293,9 @@ public class AppDron extends Application {
     }
 
     /**
+     * Lanza la aplicación JavaFX. Normalmente se invoca desde
+     * {@code co.edu.poli.sw2.vista.App}.
+     *
      * @param args argumentos de la línea de comandos.
      */
     public static void main(String[] args) {

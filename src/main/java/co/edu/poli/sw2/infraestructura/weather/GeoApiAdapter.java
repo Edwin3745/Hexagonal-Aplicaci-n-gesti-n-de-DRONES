@@ -16,13 +16,19 @@ public class GeoApiAdapter implements GeoLocationPort {
     private final GeoApiClient client;
 
     /**
+     * Crea el adaptador sobre el cliente HTTP que hace las peticiones.
+     *
      * @param client cliente de la API de Geocoding.
      */
     public GeoApiAdapter(GeoApiClient client) {
         this.client = client;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Toma la primera coincidencia que devuelve la API.</p>
+     */
     @Override
     public double[] findCoordinates(String city) {
         try {
