@@ -9,6 +9,11 @@ import java.util.List;
  * Mediator del patrón GoF: define cómo se comunican los componentes de una
  * operación de drones sin que se conozcan entre sí.
  *
+ * <p>Los componentes (Colleagues) de {@code mediator.components} solo
+ * conocen esta interfaz: cuando terminan su tarea llaman a
+ * {@link #notify(Object, MissionEvent)} y es el mediador quien decide el
+ * siguiente paso. La implementación concreta es {@link MissionCoordinator}.</p>
+ *
  * <p>Vive en la capa de aplicación: no depende de JavaFX ni de la
  * infraestructura.</p>
  */

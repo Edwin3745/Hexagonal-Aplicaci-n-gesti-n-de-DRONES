@@ -8,8 +8,13 @@ import co.edu.poli.sw2.aplicacion.puerto.salida.weather.WeatherPort;
 import co.edu.poli.sw2.dominio.weather.Weather;
 
 /**
- * Implementa la consulta del clima por ciudad: obtiene las coordenadas,
- * consulta el clima y lo notifica a los observadores suscritos.
+ * Servicio de aplicación que implementa la consulta del clima por ciudad:
+ * obtiene las coordenadas, consulta el clima y lo notifica a los
+ * observadores suscritos.
+ *
+ * <p>Usa los puertos de salida {@link GeoLocationPort} y {@link WeatherPort},
+ * y dispara el patrón Observer a través de
+ * {@link WeatherNotificationService}.</p>
  */
 public class GetWeatherByCityService implements GetWeatherByCityUseCase {
 
@@ -18,6 +23,8 @@ public class GetWeatherByCityService implements GetWeatherByCityUseCase {
     private final WeatherNotificationService notifier;
 
     /**
+     * Crea el servicio con los puertos de salida y el notificador.
+     *
      * @param geoLocation puerto que ubica la ciudad.
      * @param weatherPort puerto que entrega el clima.
      * @param notifier    notificador de los observadores.
@@ -29,7 +36,12 @@ public class GetWeatherByCityService implements GetWeatherByCityUseCase {
         this.notifier = notifier;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Los fallos de los adaptadores ({@link WeatherApiException}) se
+     * traducen a un mensaje para el usuario según su motivo.</p>
+     */
     @Override
     public Weather execute(String city) {
         try {

@@ -3,10 +3,10 @@ package co.edu.poli.sw2.dominio.modelo;
 /**
  * Representa al operador responsable de dirigir un dron dentro del sistema.
  *
- * Esta clase pertenece a la capa Modelo del patrón MVC y encapsula la información
+ * <p>Esta clase pertenece al modelo de dominio y encapsula la información
  * personal y profesional del piloto. Además, mantiene la relación con el dron que
  * tiene asignado en una asociación bidireccional, permitiendo que el estado del
- * piloto y del dron permanezca sincronizado.
+ * piloto y del dron permanezca sincronizado.</p>
  */
 public class Piloto {
 
@@ -21,7 +21,8 @@ public class Piloto {
     private String nombre;
 
     /**
-     Número de licencia de vuelo. */
+     * Número de licencia de vuelo.
+     */
     private String licencia;
 
     /**
@@ -45,7 +46,7 @@ public class Piloto {
      *
      * @param id identificador único del piloto.
      * @param nombre nombre completo del piloto.
-     * @param licencia número de licencia de vuelo
+     * @param licencia número de licencia de vuelo.
      * @param telefono número de contacto del piloto.
      */
     public Piloto(int id, String nombre, String licencia, String telefono) {
@@ -83,7 +84,17 @@ public class Piloto {
      */
     public void setNombre(String nombre) { this.nombre = nombre; }
 
+    /**
+     * Obtiene el número de licencia de vuelo del piloto.
+     *
+     * @return número de licencia.
+     */
     public String getLicencia() { return licencia; }
+    /**
+     * Actualiza el número de licencia de vuelo del piloto.
+     *
+     * @param licencia nuevo número de licencia.
+     */
     public void setLicencia(String licencia) { this.licencia = licencia; }
 
     /**
@@ -118,10 +129,12 @@ public class Piloto {
         return dron != null;
     }
 
-     /**
+    /**
      * Asigna un dron a este piloto manteniendo la coherencia de la relación
      * en ambos extremos y liberando cualquier vínculo previo, tanto del
      * piloto como del dron entrante.
+     *
+     * <p>Si el dron ya estaba asignado a este piloto, no hace nada.</p>
      *
      * @param nuevoDron dron a asignar.
      * @throws IllegalArgumentException si el dron es nulo.
@@ -147,6 +160,7 @@ public class Piloto {
 
     /**
      * Libera el dron asignado, dejando ambos extremos de la relación limpios.
+     * Si el piloto no tiene dron, no hace nada.
      */
     public void liberarDron() {
         if (this.dron != null) {
@@ -156,6 +170,11 @@ public class Piloto {
         }
     }
 
+    /**
+     * Devuelve los datos del piloto en una línea.
+     *
+     * @return id, nombre, licencia, teléfono y serial del dron asignado
+     */
     @Override
     public String toString() {
         return "Piloto{id=" + id +

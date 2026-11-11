@@ -47,6 +47,8 @@ public class PostgresDronRepository implements DronRepository {
      * objeto recibido.</p>
      *
      * @param dron dron a registrar.
+     * @throws RepositorioException si no se puede guardar; por ejemplo, si el
+     *                              serial ya existe ({@link Motivo#DUPLICADO}).
      */
     @Override
     public void guardar(Dron dron) {
@@ -86,6 +88,7 @@ public class PostgresDronRepository implements DronRepository {
      *
      * @param id identificador del dron.
      * @return {@code true} si se eliminó alguna fila.
+     * @throws RepositorioException si no se puede eliminar.
      */
     @Override
     public boolean eliminar(int id) {
@@ -108,6 +111,7 @@ public class PostgresDronRepository implements DronRepository {
      *
      * @param id identificador del dron.
      * @return el dron encontrado, o {@code null} si no existe.
+     * @throws RepositorioException si no se puede consultar.
      */
     @Override
     public Dron buscarPorId(int id) {
@@ -136,6 +140,7 @@ public class PostgresDronRepository implements DronRepository {
      * Obtiene todos los drones registrados.
      *
      * @return lista con todos los drones, vacía si no hay ninguno.
+     * @throws RepositorioException si no se puede consultar.
      */
     @Override
     public List<Dron> listarTodos() {
@@ -166,6 +171,7 @@ public class PostgresDronRepository implements DronRepository {
      *
      * @param dron dron con los datos actualizados.
      * @return {@code true} si se actualizó alguna fila.
+     * @throws RepositorioException si no se puede actualizar.
      */
     @Override
     public boolean actualizar(Dron dron) {

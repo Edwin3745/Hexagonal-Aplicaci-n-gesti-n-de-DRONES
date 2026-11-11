@@ -5,6 +5,10 @@ import co.edu.poli.sw2.dominio.weather.Weather;
 
 /**
  * Puerto de entrada: caso de uso de evaluar si el clima permite operar drones.
+ *
+ * <p>La evaluación la resuelve la cadena de responsabilidad del dominio
+ * (patrón Chain of Responsibility); este contrato solo expone el
+ * veredicto.</p>
  */
 public interface EvaluarViabilidadVueloUseCase {
 

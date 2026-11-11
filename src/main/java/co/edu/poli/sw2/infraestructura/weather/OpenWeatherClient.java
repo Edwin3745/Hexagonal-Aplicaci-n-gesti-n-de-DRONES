@@ -10,10 +10,12 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 /**
- * Cliente de la API de clima actual de OpenWeatherMap.
+ * Cliente HTTP de la API de clima actual de OpenWeatherMap; forma parte del
+ * adaptador de salida {@link OpenWeatherAdapter}.
  *
  * <p>Hace la petición con {@code units=metric} (temperatura en °C) y devuelve
- * el JSON sin interpretarlo; lo interpreta {@link OpenWeatherAdapter}.</p>
+ * el JSON sin interpretarlo; lo interpreta {@link OpenWeatherAdapter}. Traduce
+ * los errores HTTP y de red a {@link WeatherApiException}.</p>
  */
 public class OpenWeatherClient {
 
@@ -23,7 +25,9 @@ public class OpenWeatherClient {
     private final String apiKey;
 
     /**
-     * @param apiKey API key de OpenWeatherMap.
+     * Crea el cliente con la clave que se enviará en cada petición.
+     *
+     * @param apiKey API key de OpenWeatherMap (la de {@code OPENWEATHER_API_KEY}).
      */
     public OpenWeatherClient(String apiKey) {
         this.apiKey = apiKey;
@@ -35,7 +39,9 @@ public class OpenWeatherClient {
      * @param lat latitud.
      * @param lon longitud.
      * @return JSON con el clima actual.
-     * @throws WeatherApiException si la clave es inválida o no hay conexión.
+     * @throws WeatherApiException si la clave es inválida (HTTP 401), si la API
+     *                             responde con otro código distinto de 200 o si
+     *                             no hay conexión.
      */
     public String fetch(double lat, double lon) {
         // String.valueOf usa siempre punto decimal; con la configuración de

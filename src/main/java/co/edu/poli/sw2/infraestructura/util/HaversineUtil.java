@@ -4,9 +4,12 @@ import co.edu.poli.sw2.aplicacion.puerto.salida.strategy.DistanciaPort;
 import co.edu.poli.sw2.dominio.strategy.PuntoGeografico;
 
 /**
- * Implementa {@link DistanciaPort} con la fórmula de Haversine, que calcula
- * la distancia sobre la superficie de la Tierra entre dos puntos dados por
- * su latitud y longitud.
+ * Adaptador de salida que implementa {@link DistanciaPort} con la fórmula de
+ * Haversine, que calcula la distancia sobre la superficie de la Tierra entre
+ * dos puntos dados por su latitud y longitud.
+ *
+ * <p>Toma la Tierra como una esfera de radio medio 6371 km, así que el
+ * resultado es una distancia en línea recta (ortodrómica), no por carretera.</p>
  */
 public class HaversineUtil implements DistanciaPort {
 

@@ -23,6 +23,9 @@ import java.util.List;
  *   <li>Se establece el enlace      → {@code ENLACE_OK}</li>
  *   <li>Misión de vigilancia iniciada</li>
  * </ol>
+ *
+ * <p>Cada paso queda registrado como un {@link ResultadoTarea} en la
+ * bitácora que devuelve {@link #iniciarMision(Dron)}.</p>
  */
 public class MissionCoordinator implements DroneMediator {
 
@@ -36,12 +39,14 @@ public class MissionCoordinator implements DroneMediator {
     private String dronActual = "";
 
     /**
-     * Registra a este mediador en cada componente.
+     * Recibe los cuatro componentes y registra a este mediador en cada uno,
+     * para que puedan notificarle sus eventos.
      *
      * @param navigation sistema de navegación.
      * @param sensors    sistema de sensores.
      * @param battery    sistema de batería.
      * @param comms      sistema de comunicación.
+     * @throws IllegalArgumentException si alguno de los componentes es nulo.
      */
     public MissionCoordinator(NavigationSystem navigation, SensorSystem sensors,
                               BatterySystem battery, CommunicationSystem comms) {
@@ -59,6 +64,19 @@ public class MissionCoordinator implements DroneMediator {
         comms.setMediator(this);
     }
 
+    /**
+     * Inicia la operación de vigilancia del dron indicado.
+     *
+     * <p>Limpia la bitácora de la misión anterior, registra el dron
+     * seleccionado y arranca la secuencia pidiéndole a la navegación que
+     * prepare la ruta; los pasos siguientes los dispara
+     * {@link #notify(Object, MissionEvent)}.</p>
+     *
+     * @param dron dron seleccionado para la misión.
+     * @return copia inmodificable de la bitácora: un resultado por cada paso,
+     *         en orden.
+     * @throws IllegalArgumentException si {@code dron} es nulo.
+     */
     @Override
     public List<ResultadoTarea> iniciarMision(Dron dron) {
         if (dron == null) {
@@ -76,6 +94,18 @@ public class MissionCoordinator implements DroneMediator {
         return List.copyOf(bitacora);
     }
 
+    /**
+     * Recibe el aviso de un componente, lo registra en la bitácora y decide
+     * el siguiente paso: {@code RUTA_LISTA} activa los sensores,
+     * {@code SENSORES_OK} verifica la batería, {@code BATERIA_OK} establece el
+     * enlace y {@code ENLACE_OK} da la misión por iniciada.
+     * {@code BATERIA_BAJA} registra el error y aborta la misión; a partir de
+     * ese momento se ignoran los avisos restantes.
+     *
+     * @param sender componente que notifica; el nombre de su clase se usa como
+     *               origen en la bitácora.
+     * @param event  lo que ocurrió.
+     */
     @Override
     public void notify(Object sender, MissionEvent event) {
         if (abortada) {

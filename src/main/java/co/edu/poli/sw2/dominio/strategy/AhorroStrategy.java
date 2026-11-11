@@ -2,6 +2,9 @@ package co.edu.poli.sw2.dominio.strategy;
 
 /**
  * Modo Ahorro: minimiza el consumo de batería (distancia en km × 0.5).
+ *
+ * <p>Estrategia concreta del patrón Strategy que implementa
+ * {@link ConsumoStrategy}.</p>
  */
 public class AhorroStrategy implements ConsumoStrategy {
 

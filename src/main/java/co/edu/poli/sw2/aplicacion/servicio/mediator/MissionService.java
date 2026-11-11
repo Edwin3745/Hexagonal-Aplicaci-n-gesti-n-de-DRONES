@@ -9,14 +9,20 @@ import co.edu.poli.sw2.dominio.modelo.Dron;
 import java.util.List;
 
 /**
- * Client del patrón Mediator: implementa el caso de uso y le delega al
- * mediador toda la coordinación. No usa el repositorio de drones (no hay CRUD).
+ * Servicio de aplicación y Client del patrón Mediator: implementa el caso de
+ * uso {@link ExecuteMissionUseCase} y le delega al mediador toda la
+ * coordinación. No usa el repositorio de drones (no hay CRUD).
  */
 public class MissionService implements ExecuteMissionUseCase {
 
     private final DroneMediator mediator;
 
-    /** @param mediator mediador que coordina la misión. */
+    /**
+     * Crea el servicio con el mediador que coordinará las misiones.
+     *
+     * @param mediator mediador que coordina la misión.
+     * @throws IllegalArgumentException si {@code mediator} es nulo.
+     */
     public MissionService(DroneMediator mediator) {
         if (mediator == null) {
             throw new IllegalArgumentException("El mediador es obligatorio.");
@@ -24,6 +30,14 @@ public class MissionService implements ExecuteMissionUseCase {
         this.mediator = mediator;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Comprueba que haya un dron seleccionado y delega la misión en
+     * {@link DroneMediator#iniciarMision(Dron)}.</p>
+     *
+     * @throws OperacionFallidaException si {@code dron} es nulo.
+     */
     @Override
     public List<ResultadoTarea> executeMission(Dron dron) {
         if (dron == null) {

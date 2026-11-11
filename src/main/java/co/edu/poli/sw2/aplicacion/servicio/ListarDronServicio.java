@@ -9,6 +9,9 @@ import co.edu.poli.sw2.dominio.modelo.Dron;
 /**
  * Servicio de aplicación que implementa el caso de uso de consultar un único
  * dron por su identificador.
+ *
+ * <p>Solo conoce el puerto {@link DronRepository}; los fallos del repositorio
+ * se traducen a {@link OperacionFallidaException}.</p>
  */
 public class ListarDronServicio implements ListarDronUseCase {
 
@@ -16,6 +19,8 @@ public class ListarDronServicio implements ListarDronUseCase {
     private final DronRepository repositorio;
 
     /**
+     * Crea el servicio con el puerto de persistencia que debe usar.
+     *
      * @param repositorio puerto de salida a utilizar.
      */
     public ListarDronServicio(DronRepository repositorio) {
@@ -24,6 +29,11 @@ public class ListarDronServicio implements ListarDronUseCase {
 
     /**
      * {@inheritDoc}
+     *
+     * <p>Delega en el repositorio y traduce sus fallos a un mensaje para el
+     * usuario.</p>
+     *
+     * @throws OperacionFallidaException si el repositorio falla.
      */
     @Override
     public Dron listarPorId(int id) {

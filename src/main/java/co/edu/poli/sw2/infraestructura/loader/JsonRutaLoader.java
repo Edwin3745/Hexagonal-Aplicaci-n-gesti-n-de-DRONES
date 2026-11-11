@@ -29,6 +29,9 @@ public class JsonRutaLoader implements RutaPort {
     private final Path archivo;
 
     /**
+     * Crea el lector sobre el archivo indicado. El archivo no se abre aquí,
+     * sino en cada consulta.
+     *
      * @param archivo ruta del archivo JSON.
      */
     public JsonRutaLoader(Path archivo) {

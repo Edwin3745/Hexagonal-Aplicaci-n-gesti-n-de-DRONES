@@ -11,7 +11,8 @@ import co.edu.poli.sw2.dominio.weather.Weather;
  * viabilidad de vuelo.
  *
  * <p>No contiene reglas de negocio: solo recibe el clima y se lo entrega a la
- * cadena de responsabilidad del dominio, que es quien decide.</p>
+ * cadena de responsabilidad del dominio (patrón Chain of Responsibility), que
+ * es quien decide.</p>
  */
 public class EvaluarViabilidadVueloServicio implements EvaluarViabilidadVueloUseCase {
 

@@ -7,8 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Notificador del patrón Observer: los drones y demás observadores se
- * suscriben aquí y reciben automáticamente cada clima consultado.
+ * Notificador (Subject) del patrón Observer: los drones y demás observadores
+ * se suscriben aquí y reciben automáticamente cada clima consultado.
+ *
+ * <p>Solo conoce la interfaz {@link WeatherObserver}, por lo que se pueden
+ * agregar observadores nuevos sin modificar esta clase.</p>
  */
 public class WeatherNotificationService {
 
@@ -34,7 +37,8 @@ public class WeatherNotificationService {
     }
 
     /**
-     * Envía el clima a todos los observadores suscritos.
+     * Envía el clima a todos los observadores suscritos, en el orden en que
+     * se suscribieron.
      *
      * @param weather clima consultado.
      */

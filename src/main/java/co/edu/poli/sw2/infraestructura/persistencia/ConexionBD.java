@@ -11,10 +11,13 @@ import java.util.Properties;
 
 /**
  * Punto único de acceso a la base de datos, siguiendo el patrón Singleton.
+ * Forma parte del adaptador de salida de persistencia: solo la usa
+ * {@link PostgresDronRepository} (y {@code AppDron}, para cerrar la conexión).
  *
  * <p>La clase cumple dos funciones. Primero, lee una sola vez los datos de
- * conexión (URL, usuario, contraseña) desde un archivo {@code .env} o desde
- * las variables de entorno del sistema operativo. Segundo, mantiene una
+ * conexión ({@code DB_URL}, {@code DB_USER}, {@code DB_PASSWORD}) desde un
+ * archivo {@code .env} o desde las variables de entorno del sistema
+ * operativo. Segundo, mantiene una
  * <em>única</em> {@link Connection} compartida por toda la aplicación, que
  * entrega mediante {@link #getConexion()}.</p>
  *
@@ -78,6 +81,8 @@ public final class ConexionBD {
      * primera llamada, de modo que las siguientes no pagan su coste.</p>
      *
      * @return la única instancia de {@code ConexionBD}.
+     * @throws IllegalStateException si, al crearla, falta la configuración de
+     *                               la base de datos o el driver JDBC.
      */
     public static ConexionBD getInstancia() {
         ConexionBD resultado = instancia;
@@ -97,9 +102,9 @@ public final class ConexionBD {
      * Entrega la conexión compartida con la base de datos.
      *
      * <p>La primera llamada la abre; las siguientes devuelven exactamente la
-     * misma instancia. Si la conexión se hubiera perdido o cerrado, se
-     * restablece de forma transparente antes de devolverla, de modo que quien
-     * la pide siempre recibe una conexión utilizable.</p>
+     * misma instancia. Si la conexión ya fue cerrada (según
+     * {@link Connection#isClosed()}), se abre una nueva de forma transparente
+     * antes de devolverla.</p>
      *
      * <p><strong>La conexión pertenece al Singleton: quien la recibe no debe
      * cerrarla.</strong> En particular, no debe colocarse en un
@@ -153,6 +158,8 @@ public final class ConexionBD {
      *
      * @return la conexión compartida, abierta y lista para usarse.
      * @throws SQLException si la conexión no puede establecerse.
+     * @throws IllegalStateException si falta la configuración de la base de
+     *                               datos o el driver JDBC.
      */
     public static Connection obtenerConexion() throws SQLException {
         return getInstancia().getConexion();

@@ -3,6 +3,9 @@ package co.edu.poli.sw2.dominio.weather;
 /**
  * Condiciones climáticas de una ciudad en un momento dado.
  *
+ * <p>Es el dato que viaja en el patrón Observer: el notificador lo entrega
+ * a cada {@link WeatherObserver} mediante {@link WeatherObserver#update(Weather)}.</p>
+ *
  * <p>Reúne los cinco aspectos que se usan para decidir si un dron puede
  * operar, ya expresados en las unidades de las reglas: temperatura en °C,
  * humedad en %, velocidad del viento en km/h, presión en hPa y visibilidad
@@ -21,6 +24,9 @@ public final class Weather {
     private final double visibility;
 
     /**
+     * Crea el reporte del clima con los cinco aspectos ya convertidos a las
+     * unidades de las reglas.
+     *
      * @param city        nombre de la ciudad.
      * @param temperature temperatura en °C.
      * @param humidity    humedad relativa en %.
@@ -38,37 +44,63 @@ public final class Weather {
         this.visibility = visibility;
     }
 
-    /** @return nombre de la ciudad. */
+    /**
+     * Devuelve la ciudad del reporte.
+     *
+     * @return nombre de la ciudad.
+     */
     public String getCity() {
         return city;
     }
 
-    /** @return temperatura en °C. */
+    /**
+     * Devuelve la temperatura.
+     *
+     * @return temperatura en °C.
+     */
     public double getTemperature() {
         return temperature;
     }
 
-    /** @return humedad relativa en %. */
+    /**
+     * Devuelve la humedad relativa.
+     *
+     * @return humedad relativa en %.
+     */
     public double getHumidity() {
         return humidity;
     }
 
-    /** @return velocidad del viento en km/h. */
+    /**
+     * Devuelve la velocidad del viento.
+     *
+     * @return velocidad del viento en km/h.
+     */
     public double getWindSpeed() {
         return windSpeed;
     }
 
-    /** @return presión atmosférica en hPa. */
+    /**
+     * Devuelve la presión atmosférica.
+     *
+     * @return presión atmosférica en hPa.
+     */
     public double getPressure() {
         return pressure;
     }
 
-    /** @return visibilidad en km. */
+    /**
+     * Devuelve la visibilidad.
+     *
+     * @return visibilidad en km.
+     */
     public double getVisibility() {
         return visibility;
     }
 
     /**
+     * Resume el reporte en una línea legible.
+     *
      * @return la ciudad y los cinco aspectos con sus unidades, en una línea.
      */
     @Override

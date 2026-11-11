@@ -56,6 +56,8 @@ public class RepositorioException extends RuntimeException {
     }
 
     /**
+     * Devuelve el motivo del fallo.
+     *
      * @return motivo del fallo.
      */
     public Motivo getMotivo() {
@@ -63,6 +65,8 @@ public class RepositorioException extends RuntimeException {
     }
 
     /**
+     * Indica si el fallo se debe a un dato que debía ser único.
+     *
      * @return {@code true} si el fallo se debe a un dato duplicado.
      */
     public boolean esDuplicado() {
@@ -70,6 +74,8 @@ public class RepositorioException extends RuntimeException {
     }
 
     /**
+     * Indica si los datos incumplen una regla del almacenamiento.
+     *
      * @return {@code true} si los datos incumplen una regla del almacenamiento.
      */
     public boolean esViolacionDeRegla() {
@@ -77,6 +83,8 @@ public class RepositorioException extends RuntimeException {
     }
 
     /**
+     * Indica si el registro no puede modificarse por estar vinculado a otros.
+     *
      * @return {@code true} si el registro está vinculado a otros.
      */
     public boolean esReferenciaInvalida() {

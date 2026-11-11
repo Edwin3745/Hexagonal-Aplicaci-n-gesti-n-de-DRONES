@@ -23,9 +23,11 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * Tecnología de la interfaz: controlador JavaFX de la pantalla de drones.
+ * Tecnología de la interfaz: controlador de vista JavaFX de la pantalla de
+ * drones ({@code DrownView.fxml}).
  *
- * <p>Es la única clase que conoce JavaFX. Solo se ocupa de los controles:
+ * <p>Junto con {@code AppDron}, que la carga, es la única clase que conoce
+ * JavaFX. Solo se ocupa de los controles:
  * recoge lo que el usuario escribe, se lo pasa a {@link DronAdaptador} y
  * muestra lo que este devuelve. No conoce los casos de uso ni la base de datos,
  * y no interpreta errores técnicos: cuando algo falla, muestra el mensaje que
@@ -75,6 +77,12 @@ public class DronTecnologia {
         this.adaptador = adaptador;
     }
 
+    /**
+     * Inicializa la pantalla; JavaFX la invoca después de inyectar los campos
+     * {@code @FXML}. Configura los selectores de tipo y de estrategia de
+     * consumo, prepara las columnas de la tabla y carga los drones
+     * registrados.
+     */
     @FXML
     public void initialize() {
         configurarComboTipo();
@@ -191,6 +199,12 @@ public class DronTecnologia {
     // Acciones del usuario
     // ------------------------------------------------------------------
 
+    /**
+     * Registra un dron nuevo con los datos del formulario. La capacidad del
+     * tanque solo se lee si el tipo es agricultura. Si el registro tiene éxito
+     * refresca la tabla y limpia el formulario; si falla, muestra el mensaje
+     * en una alerta.
+     */
     @FXML
     public void agregarDron() {
         try {
@@ -218,6 +232,11 @@ public class DronTecnologia {
         }
     }
 
+    /**
+     * Copia los datos del formulario al dron seleccionado en la tabla, incluido
+     * el atributo propio de su subtipo, y guarda los cambios. Si no hay dron
+     * seleccionado o la operación falla, muestra una alerta.
+     */
     @FXML
     public void actualizarDronSeleccionado() {
         Dron seleccionado = tablaDrones.getSelectionModel().getSelectedItem();
@@ -248,6 +267,11 @@ public class DronTecnologia {
         }
     }
 
+    /**
+     * Elimina el dron seleccionado en la tabla después de pedir confirmación
+     * al usuario. Si no hay dron seleccionado o la operación falla, muestra
+     * una alerta.
+     */
     @FXML
     public void eliminarDron() {
         Dron seleccionado = tablaDrones.getSelectionModel().getSelectedItem();
@@ -274,6 +298,10 @@ public class DronTecnologia {
         });
     }
 
+    /**
+     * Vacía los campos del formulario, vuelve a seleccionar el primer tipo de
+     * dron y quita la selección de la tabla.
+     */
     @FXML
     public void limpiarFormulario() {
         txtId.clear();
@@ -470,14 +498,19 @@ public class DronTecnologia {
     // Estado operativo (patrón State)
     // ------------------------------------------------------------------
 
+    /** Enciende el dron seleccionado en la tabla. */
     @FXML public void encenderDron()        { cambiarEstado("encender", adaptador::encenderDron); }
 
+    /** Apaga el dron seleccionado en la tabla. */
     @FXML public void apagarDron()          { cambiarEstado("apagar", adaptador::apagarDron); }
 
+    /** Hace despegar el dron seleccionado en la tabla. */
     @FXML public void despegarDron()        { cambiarEstado("despegar", adaptador::despegarDron); }
 
+    /** Inicia el aterrizaje del dron seleccionado en la tabla. */
     @FXML public void aterrizarDron()       { cambiarEstado("aterrizar", adaptador::aterrizarDron); }
 
+    /** Completa el aterrizaje del dron seleccionado en la tabla. */
     @FXML public void finalizarAterrizaje() { cambiarEstado("finalizar aterrizaje", adaptador::finalizarAterrizaje); }
 
     /**
