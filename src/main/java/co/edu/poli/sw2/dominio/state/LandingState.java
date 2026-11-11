@@ -6,32 +6,11 @@ package co.edu.poli.sw2.dominio.state;
  * <p>Permite: finalizarAterrizaje → EN ESPERA. Rechaza ({@link IllegalStateException}):
  * encender, apagar, despegar, aterrizar.</p>
  *
- * <p>Estado concreto del patrón State: implementa {@link DroneState} y
- * es usado por {@link DroneContext}.</p>
+ * <p>Estado concreto del patrón State: extiende {@link AbstractDroneState}
+ * (que implementa {@link DroneState}) y es usado por {@link DroneContext}.</p>
  */
-public class LandingState implements DroneState {
-
+public class LandingState extends AbstractDroneState {
     private static final String NOMBRE = "ATERRIZANDO";
-
-    @Override
-    public void encender(DroneContext contexto) {
-        throw new IllegalStateException("No se puede encender un dron en estado " + NOMBRE + ".");
-    }
-
-    @Override
-    public void apagar(DroneContext contexto) {
-        throw new IllegalStateException("No se puede apagar un dron en estado " + NOMBRE + ".");
-    }
-
-    @Override
-    public void despegar(DroneContext contexto) {
-        throw new IllegalStateException("No se puede despegar un dron en estado " + NOMBRE + ".");
-    }
-
-    @Override
-    public void aterrizar(DroneContext contexto) {
-        throw new IllegalStateException("No se puede aterrizar un dron en estado " + NOMBRE + ".");
-    }
 
     @Override
     public void finalizarAterrizaje(DroneContext contexto) {

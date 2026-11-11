@@ -1,13 +1,9 @@
 package co.edu.poli.sw2.infraestructura.weather;
 
 import co.edu.poli.sw2.aplicacion.puerto.salida.weather.WeatherApiException;
-import co.edu.poli.sw2.aplicacion.puerto.salida.weather.WeatherApiException.Reason;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
 /**
  * Cliente HTTP de la API de clima actual de OpenWeatherMap; forma parte del
@@ -17,12 +13,9 @@ import java.net.http.HttpResponse;
  * el JSON sin interpretarlo; lo interpreta {@link OpenWeatherAdapter}. Traduce
  * los errores HTTP y de red a {@link WeatherApiException}.</p>
  */
-public class OpenWeatherClient {
-
+public class OpenWeatherClient extends AbstractOpenWeatherClient {
     private static final String URL = "https://api.openweathermap.org/data/2.5/weather";
-
-    private final HttpClient http = HttpClient.newHttpClient();
-    private final String apiKey;
+    private static final String SERVICIO = "Weather";
 
     /**
      * Crea el cliente con la clave que se enviará en cada petición.
@@ -30,7 +23,17 @@ public class OpenWeatherClient {
      * @param apiKey API key de OpenWeatherMap (la de {@code OPENWEATHER_API_KEY}).
      */
     public OpenWeatherClient(String apiKey) {
-        this.apiKey = apiKey;
+        super(apiKey, SERVICIO);
+    }
+
+    /**
+     * Crea el cliente con un {@link HttpClient} dado (visible para pruebas).
+     *
+     * @param apiKey API key de OpenWeatherMap.
+     * @param http   cliente HTTP a usar.
+     */
+    OpenWeatherClient(String apiKey, HttpClient http) {
+        super(apiKey, SERVICIO, http);
     }
 
     /**
@@ -51,23 +54,6 @@ public class OpenWeatherClient {
                 + "&lon=" + String.valueOf(lon)
                 + "&units=metric"
                 + "&appid=" + apiKey);
-        try {
-            HttpResponse<String> respuesta = http.send(
-                    HttpRequest.newBuilder(uri).GET().build(),
-                    HttpResponse.BodyHandlers.ofString());
-            if (respuesta.statusCode() == 401) {
-                throw new WeatherApiException(Reason.INVALID_API_KEY, "Weather respondió 401");
-            }
-            if (respuesta.statusCode() != 200) {
-                throw new WeatherApiException(Reason.UNAVAILABLE, "Weather respondió " + respuesta.statusCode());
-            }
-            return respuesta.body();
-        } catch (InterruptedException e) {
-            // Se restaura la marca de interrupción para no ocultarla al resto del programa.
-            Thread.currentThread().interrupt();
-            throw new WeatherApiException(Reason.UNAVAILABLE, "Sin conexión con Weather", e);
-        } catch (IOException e) {
-            throw new WeatherApiException(Reason.UNAVAILABLE, "Sin conexión con Weather", e);
-        }
+        return send(uri);
     }
 }

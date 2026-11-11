@@ -15,7 +15,7 @@
         <javafx.version>21.0.2</javafx.version>
     </properties>
 
-        <dependencies>
+    <dependencies>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -61,6 +61,27 @@
                 <configuration>
                     <mainClass>co.edu.poli.sw2.vista.App</mainClass>
                 </configuration>
+            </plugin>
+
+            <!-- Cobertura de pruebas (la lee SonarQube) -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

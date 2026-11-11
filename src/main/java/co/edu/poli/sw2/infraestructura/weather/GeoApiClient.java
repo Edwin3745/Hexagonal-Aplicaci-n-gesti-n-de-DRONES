@@ -1,14 +1,10 @@
 package co.edu.poli.sw2.infraestructura.weather;
 
 import co.edu.poli.sw2.aplicacion.puerto.salida.weather.WeatherApiException;
-import co.edu.poli.sw2.aplicacion.puerto.salida.weather.WeatherApiException.Reason;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -19,12 +15,9 @@ import java.nio.charset.StandardCharsets;
  * {@link GeoApiAdapter}. Traduce los errores HTTP y de red a
  * {@link WeatherApiException}.</p>
  */
-public class GeoApiClient {
-
+public class GeoApiClient extends AbstractOpenWeatherClient {
     private static final String URL = "https://api.openweathermap.org/geo/1.0/direct";
-
-    private final HttpClient http = HttpClient.newHttpClient();
-    private final String apiKey;
+    private static final String SERVICIO = "Geocoding";
 
     /**
      * Crea el cliente con la clave que se enviará en cada petición.
@@ -32,7 +25,17 @@ public class GeoApiClient {
      * @param apiKey API key de OpenWeatherMap (la de {@code OPENWEATHER_API_KEY}).
      */
     public GeoApiClient(String apiKey) {
-        this.apiKey = apiKey;
+        super(apiKey, SERVICIO);
+    }
+
+    /**
+     * Crea el cliente con un {@link HttpClient} dado (visible para pruebas).
+     *
+     * @param apiKey API key de OpenWeatherMap.
+     * @param http   cliente HTTP a usar.
+     */
+    GeoApiClient(String apiKey, HttpClient http) {
+        super(apiKey, SERVICIO, http);
     }
 
     /**
@@ -49,23 +52,6 @@ public class GeoApiClient {
                 + "?q=" + URLEncoder.encode(city, StandardCharsets.UTF_8)
                 + "&limit=1"
                 + "&appid=" + apiKey);
-        try {
-            HttpResponse<String> respuesta = http.send(
-                    HttpRequest.newBuilder(uri).GET().build(),
-                    HttpResponse.BodyHandlers.ofString());
-            if (respuesta.statusCode() == 401) {
-                throw new WeatherApiException(Reason.INVALID_API_KEY, "Geocoding respondió 401");
-            }
-            if (respuesta.statusCode() != 200) {
-                throw new WeatherApiException(Reason.UNAVAILABLE, "Geocoding respondió " + respuesta.statusCode());
-            }
-            return respuesta.body();
-        } catch (InterruptedException e) {
-            // Se restaura la marca de interrupción para no ocultarla al resto del programa.
-            Thread.currentThread().interrupt();
-            throw new WeatherApiException(Reason.UNAVAILABLE, "Sin conexión con Geocoding", e);
-        } catch (IOException e) {
-            throw new WeatherApiException(Reason.UNAVAILABLE, "Sin conexión con Geocoding", e);
-        }
+        return send(uri);
     }
 }
