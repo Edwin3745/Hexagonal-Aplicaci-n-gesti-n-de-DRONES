@@ -60,7 +60,11 @@ public class GeoApiClient {
                 throw new WeatherApiException(Reason.UNAVAILABLE, "Geocoding respondió " + respuesta.statusCode());
             }
             return respuesta.body();
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            // Se restaura la marca de interrupción para no ocultarla al resto del programa.
+            Thread.currentThread().interrupt();
+            throw new WeatherApiException(Reason.UNAVAILABLE, "Sin conexión con Geocoding", e);
+        } catch (IOException e) {
             throw new WeatherApiException(Reason.UNAVAILABLE, "Sin conexión con Geocoding", e);
         }
     }

@@ -62,7 +62,11 @@ public class OpenWeatherClient {
                 throw new WeatherApiException(Reason.UNAVAILABLE, "Weather respondió " + respuesta.statusCode());
             }
             return respuesta.body();
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            // Se restaura la marca de interrupción para no ocultarla al resto del programa.
+            Thread.currentThread().interrupt();
+            throw new WeatherApiException(Reason.UNAVAILABLE, "Sin conexión con Weather", e);
+        } catch (IOException e) {
             throw new WeatherApiException(Reason.UNAVAILABLE, "Sin conexión con Weather", e);
         }
     }
